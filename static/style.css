@@ -1,0 +1,11 @@
+h1{
+    text-align: center;
+}
+
+.cont{
+    scroll-snap-points-y: repeat(314px);
+}
+
+.child{
+    scroll-snap-align: start;
+}

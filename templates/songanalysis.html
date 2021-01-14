@@ -1,0 +1,47 @@
+<html>
+    <head>
+        <title>Spotify Data</title>
+        <link rel="stylesheet" href='/static/style.css'>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" 
+              rel="stylesheet" 
+              integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" 
+              crossorigin="anonymous">
+    </head>
+    <body>
+    <div>
+        <div>
+            <a href='/topartists'>Click here to see your top artists</a>
+            <a href='/topsongs'>Click here to see your top songs</a>
+            <a href='/search'>Click here to search</a>
+        </div>
+        <h1>Search for tracks here</h1>
+        <div class="input-group mb-3">
+            <input type="text" id='search' class="form-control" aria-describedby="button-addon2">
+            <button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="makeSearch()">Search</button>
+        </div>        
+    </div>
+    <div style ="display: inline;">
+        <img src='{{img}}' width="250" height='250'>
+        <h3>{{artist}}</h3>
+        <h3>{{name}}</h3>
+    </div>
+    <br>
+    <div style='width: 35%'>
+        <h1>Danceability</h1>
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" style="width: {{dance}}%" aria-valuemin="0" aria-valuemax="1">{{dance}}%</div>
+        </div>
+        <br>
+        <h1>Energy</h1>
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" style="width: {{energy}}%" aria-valuemin="0" aria-valuemax="100">{{energy}}%</div>      
+        </div>
+        <br>
+        <h1>Instrumentalness</h1>
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" style="width: {{instrumentalness}}%" aria-valuemin="0" aria-valuemax="100">{{instrumentalness}}%</div>
+        </div>
+    </div>
+        <script type='text/javascript' src='static/search.js'></script>
+    </body>
+</html>
