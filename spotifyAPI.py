@@ -111,8 +111,8 @@ class spotify_api():
         response = requests.get('https://api.spotify.com/v1/tracks/%s'%trackid,headers=self.headers)
         return response.json()
 
-    def get_next_playlist(self,next): # Requires calling the "get_playlist()" function first to retrieve "next"
-        response = requests.get(next,headers=self.headers)
+    def get_next_playlist(self,next_page): # Requires calling the "get_playlist()" function first to retrieve "next"
+        response = requests.get(next_page,headers=self.headers)
         return response.json()
 
     def make_playlist(self,id,name,desc):
