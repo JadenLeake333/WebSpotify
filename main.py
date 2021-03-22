@@ -235,47 +235,8 @@ def tracks():
 @app.route('/viewplaylists')
 def view_playlists():
     user_playlists = spotify.get_user_playlists()
-    img, names, ids = [], [], []
-    for playlists in user_playlists['items']:
-        try:
-            img.append(playlists['images'][0]['url'])
-        except:
-            img.append(
-                'https://www.pngkey.com/png/detail/113-1138845_question-mark-inside-square-question-mark-icon-white.png'
-            )
-        names.append(playlists['name'])
-        ids.append(playlists['uri'])
-
-    table = "<div class='row'>"
-    for idx in range(len(names)):
-        table += "<div class='col' style='margin: 10px;'><figure><a href='/playlistdata?playlist=%s'><img src='%s' height='300px' width='300px'></a><figcaption>%s</figcaption></figure></div>" % (
-            ids[idx], img[idx], names[idx])
-    table += '</div>'
-    return '''
-    <html>
-        <head>
-            <title>Spotify Data</title>
-            <link href="static/bootstrap.min.css" rel="stylesheet">
-            <link href="static/cover.css" rel="stylesheet">
-        </head>
-        <body class="text-white bg-dark">
-        <div>
-            <header class="mb-auto">
-                <nav class="nav nav-masthead justify-content-center float-md-end">
-                    <a class="nav-link fs-2" href='/search'>Search</a>
-                    <a class="nav-link fs-2" href='/viewplaylists'>My playlists</a>
-                </nav>
-            </header>
-            <div class="input-group mb-3">
-                <input type="text" id='search' placeholder="Paste the link of a song or playlist here! Or just search a name!" class="form-control" aria-describedby="button-addon2">
-                <button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="makeSearch()">Search</button>
-            </div>        
-        </div>
-            %s
-            <script type='text/javascript' src='static/search.js'></script>
-        </body>
-    </html>
-    ''' % (table)
+    
+    return render_template('viewplaylists.html',data=user_playlists['items'])
 
 
 if __name__ == "__main__":
