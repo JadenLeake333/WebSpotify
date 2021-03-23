@@ -55,3 +55,6 @@ body {
 h1{
   font-size: xx-large;
 }
+#ex1Slider .slider-selection {
+	background: #BABABA;
+}

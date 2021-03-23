@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <title>Spotify Data</title>
+        <link href="static/bootstrap.min.css" rel="stylesheet">
+        <link href="static/cover.css" rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/bootstrap-slider.min.js" integrity="sha512-f0VlzJbcEB6KiW8ZVtL+5HWPDyW1+nJEjguZ5IVnSQkvZbwBt2RfCBY0CBO1PsMAqxxrG4Di6TfsCPP3ZRwKpA==" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/css/bootstrap-slider.css" integrity="sha512-SZgE3m1he0aEF3tIxxnz/3mXu/u/wlMNxQSnE0Cni9j/O8Gs+TjM9tm1NX34nRQ7GiLwUEzwuE3Wv2FLz2667w==" crossorigin="anonymous" />
+    </head>
+    <body class="text-white bg-dark">
+    <div>
+        <header class="mb-auto">
+            <nav class="nav nav-masthead justify-content-center float-md-end">
+                <a class="nav-link fs-2" href='/search'>Search</a>
+                <a class="nav-link fs-2" href='/viewplaylists'>My playlists</a>
+            </nav>
+        </header>
+        <div class="input-group mb-3">
+            <input type="text" id='search' placeholder="Paste the link of a song or playlist here! Or just search a name!" class="form-control" aria-describedby="button-addon2">
+            <button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="makeSearch()">Search</button>
+        </div>        
+    </div>
+
+    <div class='row input-group mb-3 d-flex justify-content-center text-center'>
+        <h1>Danceability</h1>
+            <input id="dance" data-slider-id='ex1Slider' style="width: 50%" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="50"/>
+        <h1>Energy</h1>
+            <input id="energy" data-slider-id='ex1Slider' style="width: 50%" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="50"/>
+        <h1>Instrumentalness</h1>
+            <input id="instrumental" data-slider-id='ex1Slider' style="width: 50%" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="50"/>
+        <h1>Valence</h1>
+            <input id="valence" data-slider-id='ex1Slider' style="width: 50%" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="50"/>
+        <button class="btn btn-outline-secondary bg-light" type="button" id="button-addon2" onclick="getRecommendations()">GO!</button>
+    </div>  
+    <script type='text/javascript' src='static/recommendations.js'></script>
+    <script type='text/javascript' src='static/search.js'></script>
+    </body>
+</html>
+
+
+
+<!--<input id="ex1" data-slider-id='ex1Slider' type="text" data-slider-min="0" data-slider-max="20" data-slider-step="1" data-slider-value="14"/>-->

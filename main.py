@@ -238,6 +238,52 @@ def view_playlists():
     
     return render_template('viewplaylists.html',data=user_playlists['items'])
 
+@app.route('/recommend')
+def recommend_songs():
+    return render_template('recommend.html')
+
+@app.route('/recommendedsongs')
+def display_recommended(dance=None, energy=None, instrumental=None, valence=None):
+    dance = int(request.args.get("dance")) / 100
+    energy = int(request.args.get("energy")) / 100
+    instrumental = int(request.args.get("instrumental")) / 100
+    valence = int(request.args.get('valence')) / 100
+
+    song_data = spotify.get_user_tracks()
+    song_artist_data = spotify.get_user_artists()
+    song_artist, song_id, song_genre = [], [], []
+
+    for songs in song_data['items']:
+        song_artist.append(songs['artists'][0]['id'])
+        song_id.append(songs['id'])
+
+    for songs in song_artist_data['items']: 
+        song_genre.append(songs['genres'][0])
+        '''  
+        try: # This needs a fix once fully working
+        song_artist = song_artist[0:4]
+        song_id = song_id[0:4]
+        song_genre = song_genre[0:4]
+    except:'''
+
+    song_artist = song_artist[0]
+    song_id = song_id[0]
+    song_genre = song_genre[0]
+
+    '''
+    artists=",".join(song_artist)
+    tracks=','.join(song_id)
+    genres=','.join(song_genre)
+    '''
+    
+    genres = song_genre.replace(" ","%20")
+
+    recommended = spotify.get_user_recommendations(song_artist,song_id,genres,dance=dance,energy=energy,instrumental=instrumental,valence=valence)
+    print(recommended)
+    return 'hey'
+
+
+
 
 if __name__ == "__main__":
     app.run() #host='0.0.0.0'

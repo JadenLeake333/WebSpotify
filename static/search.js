@@ -12,8 +12,7 @@ const makeSearch = () =>{
         window.location.href = "/playlistdata?playlist="+text
     }else{
         window.location.href = "/search?s="+text
-    }
-    
+    } 
 }
 
 const parseURL = (url,track) =>{ // Temporary function to convert spotify urls into uris. // Track will be a flag indicating whether it is a track or not
@@ -27,3 +26,4 @@ const parseURL = (url,track) =>{ // Temporary function to convert spotify urls i
         return url
     }
 }
+

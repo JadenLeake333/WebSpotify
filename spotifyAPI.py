@@ -66,12 +66,9 @@ class spotify_api():
         # Obtain user's (who confirmed website) top tracks
         response = requests.get('https://api.spotify.com/v1/recommendations/available-genre-seeds', headers=self.headers)
         return response.json()
-    def get_user_recommendations(self,artist,params):
-        csv = ""
-        for i in artist:
-            csv += i+","
-        csv = csv.strip(",")
-        response = requests.get('https://api.spotify.com/v1/recommendations?seed_artists=%s&target_danceability=%s&target_acousticness=%s&target_energy=%s&target_instrumentalness=%s&target_liveness=%s&target_loudness=%s&target_speechiness=%s&target_tempo=%s&target_valence=%s'%(csv,params[0],params[1],params[2],params[3],params[4],params[5],params[6],params[7],params[8]),headers=self.headers) 
+    def get_user_recommendations(self,artist,tracks,genres,**kwargs):
+        print('https://api.spotify.com/v1/recommendations?seed_artists=%s&seed_tracks=%s&seed_genres=%s&target_danceability=%s&target_energy=%s&target_instrumentalness=%s&target_valence=%s'%(artist,tracks,genres,kwargs['dance'],kwargs['energy'],kwargs['instrumental'],kwargs['valence']))
+        response = requests.get('https://api.spotify.com/v1/recommendations?seed_artists=%s&seed_tracks=%s&seed_genres=%s&target_danceability=%s&target_energy=%s&target_instrumentalness=%s&target_valence=%s'%(artist,tracks,genres,kwargs['dance'],kwargs['energy'],kwargs['instrumental'],kwargs['valence']),headers=self.headers) 
         return response.json()
 
     def get_analysis(self,id):
