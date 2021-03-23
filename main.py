@@ -279,10 +279,19 @@ def display_recommended(dance=None, energy=None, instrumental=None, valence=None
     genres = song_genre.replace(" ","%20")
 
     recommended = spotify.get_user_recommendations(song_artist,song_id,genres,dance=dance,energy=energy,instrumental=instrumental,valence=valence)
-    print(recommended)
-    return 'hey'
 
+    return render_template('recommendedplaylist.html',data=recommended['tracks'])
 
+@app.route('/recommendplaylist')
+def make_recommended_playlist():
+    tracks = request.args.get('tracks')
+    print("Tracks",tracks)
+    user = spotify.get_user()
+    user_id = user['id']
+    recommended_playlist = spotify.make_playlist(
+    user_id, "Recommended Songs", "Here are your recommended songs!")
+    spotify.fill_playlist(recommended_playlist['id'], tracks)
+    return "Playlist has been made, check your spotify! You can close this tab."
 
 
 if __name__ == "__main__":

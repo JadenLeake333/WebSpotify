@@ -67,7 +67,6 @@ class spotify_api():
         response = requests.get('https://api.spotify.com/v1/recommendations/available-genre-seeds', headers=self.headers)
         return response.json()
     def get_user_recommendations(self,artist,tracks,genres,**kwargs):
-        print('https://api.spotify.com/v1/recommendations?seed_artists=%s&seed_tracks=%s&seed_genres=%s&target_danceability=%s&target_energy=%s&target_instrumentalness=%s&target_valence=%s'%(artist,tracks,genres,kwargs['dance'],kwargs['energy'],kwargs['instrumental'],kwargs['valence']))
         response = requests.get('https://api.spotify.com/v1/recommendations?seed_artists=%s&seed_tracks=%s&seed_genres=%s&target_danceability=%s&target_energy=%s&target_instrumentalness=%s&target_valence=%s'%(artist,tracks,genres,kwargs['dance'],kwargs['energy'],kwargs['instrumental'],kwargs['valence']),headers=self.headers) 
         return response.json()
 
@@ -100,11 +99,13 @@ class spotify_api():
 
     def search_track(self,track):
         # Precondition: A unique string access code, passed by Spotify endpoint
+        
         response = requests.get('https://api.spotify.com/v1/search?q=%s&type=track'%track,headers=self.headers)
         return response.json()
 
     def search_trackid(self,trackid):
         # Precondition: A unique string access code, passed by Spotify endpoint
+        #Can take multiple tracks, csv
         response = requests.get('https://api.spotify.com/v1/tracks/%s'%trackid,headers=self.headers)
         return response.json()
 
@@ -113,6 +114,7 @@ class spotify_api():
         return response.json()
 
     def make_playlist(self,id,name,desc):
+        #User id, Playlist name and description
         playlist_header = {
             "Authorization" : "Bearer %s"%self.token, 
             "Content-Type":"application/json"

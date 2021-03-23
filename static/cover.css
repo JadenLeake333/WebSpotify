@@ -56,5 +56,9 @@ h1{
   font-size: xx-large;
 }
 #ex1Slider .slider-selection {
-	background: #BABABA;
+	background: #2668cc;
+}
+
+h5{
+  display:none;
 }
