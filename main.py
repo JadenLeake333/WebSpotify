@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, render_template,session
 from spotifyAPI import spotify_api
 import os
 from parseJSON import parse_json
@@ -11,7 +11,9 @@ load_dotenv() #Get env variables
 
 client_id = os.getenv("CLIENT")
 client_secret = os.getenv("SECRET")
-redirect_uri = 'http://localhost:5000/callback' #https://Web-Spotify.jadenleake.repl.co/callback
+app.secret_key = os.getenv("SESSIONSECRET")
+
+redirect_uri = 'http://localhost:5000/callback' #https://WebSpotify.jadenleake.repl.co/callback
 
 spotify = spotify_api(
     client_id, client_secret,
@@ -37,13 +39,15 @@ def main():
         pass
 
     song_data = spotify.get_user_tracks()
+    user = spotify.get_user()
+    session['username'] = user['display_name']
     try:
         if song_data['error']['status'] == 401:
             return redirect(url_for('starter'))
     except:
         pass
 
-    return render_template('callback.html',data=song_data['items'])
+    return render_template('callback.html',data=song_data['items'],user=session['username'])
 
 @app.route('/makeplaylist')
 def make_playlist():
