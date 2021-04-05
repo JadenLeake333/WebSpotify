@@ -39,40 +39,44 @@ class spotify_api():
         }
         
         response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data=data)
-        try:
-            response.json()['access_token']
-        except:
-            print(response.json())
-            quit()
-        self.token = response.json()['access_token']
-        self.headers = {
-        'Authorization': 'Bearer %s'%self.token,
-            }
         return response.json()['access_token'] #Return access code
 
-    def get_user_artists(self):
+    def get_user_artists(self,token):
         # Obtain user's (who confirmed website) top artists
         response = requests.get('https://api.spotify.com/v1/me/top/artists', headers=self.headers)
         return response.json()
 
-    def get_user_tracks(self):
+    def get_user_tracks(self,token):
         # Precondition: A unique string access code, passed by Spotify endpoint
         # Obtain user's (who confirmed website) top tracks
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/me/top/tracks', headers=self.headers)
         return response.json()
     
-    def get_genre_seeds(self):
+    def get_genre_seeds(self,token):
         # Precondition: A unique string access code, passed by Spotify endpoint
         # Obtain user's (who confirmed website) top tracks
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/recommendations/available-genre-seeds', headers=self.headers)
         return response.json()
-    def get_user_recommendations(self,artist,tracks,genres,**kwargs):
+
+    def get_user_recommendations(self,artist,tracks,genres,token,**kwargs):
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/recommendations?seed_artists=%s&seed_tracks=%s&seed_genres=%s&target_danceability=%s&target_energy=%s&target_instrumentalness=%s&target_valence=%s'%(artist,tracks,genres,kwargs['dance'],kwargs['energy'],kwargs['instrumental'],kwargs['valence']),headers=self.headers) 
         return response.json()
 
-    def get_analysis(self,id):
+    def get_analysis(self,id,token):
         # Precondition: A unique string access code, passed by Spotify endpoint and a unqiue string belonging to each spotify track
         # Obtain Spotify's track analysis (Danceability mainly)
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         if type(id) != list:
             response = requests.get('https://api.spotify.com/v1/audio-features/%s'%id,headers=self.headers)
             return response.json()
@@ -81,40 +85,63 @@ class spotify_api():
            response = requests.get('https://api.spotify.com/v1/audio-features/?ids=%s'%ids,headers=self.headers)
            return response.json()
 
-    def get_artist(self,artist):
+    def get_artist(self,artist,token):
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/search?q=%s&type=artist'%artist,headers=self.headers)
         return response.json()
 
-    def search_artist(self,artist):
+    def search_artist(self,artist,token):
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/search?q=%s&type=artist'%artist,headers=self.headers)
         return response.json()
 
-    def get_playlist(self,playlistid):
+    def get_playlist(self,playlistid,token):
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/playlists/%s'%playlistid, headers=self.headers)
         return response.json()
 
-    def get_recommendations(self,genres):
+    def get_recommendations(self,genres,token):
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/recommendations?seed_genres=%s'%genres,headers=self.headers)
         return response.json()
 
-    def search_track(self,track):
+    def search_track(self,track,token):
         # Precondition: A unique string access code, passed by Spotify endpoint
-        
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/search?q=%s&type=track'%track,headers=self.headers)
         return response.json()
 
-    def search_trackid(self,trackid):
+    def search_trackid(self,trackid,token):
         # Precondition: A unique string access code, passed by Spotify endpoint
         #Can take multiple tracks, csv
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/tracks/%s'%trackid,headers=self.headers)
         return response.json()
 
-    def get_next_playlist(self,next_page): # Requires calling the "get_playlist()" function first to retrieve "next"
+    def get_next_playlist(self,next_page,token): # Requires calling the "get_playlist()" function first to retrieve "next"
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get(next_page,headers=self.headers)
         return response.json()
 
-    def make_playlist(self,id,name,desc):
+    def make_playlist(self,id,name,desc,token):
         #User id, Playlist name and description
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         playlist_header = {
             "Authorization" : "Bearer %s"%self.token, 
             "Content-Type":"application/json"
@@ -124,15 +151,24 @@ class spotify_api():
         response = requests.post('https://api.spotify.com/v1/users/%s/playlists'%(id),headers=playlist_header,data=playlist_data)
         return response.json()
 
-    def get_user(self):
+    def get_user(self,token):
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/me',headers=self.headers)
         return response.json()
 
-    def fill_playlist(self,id,uris):
+    def fill_playlist(self,id,uris,token):
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.post("https://api.spotify.com/v1/playlists/%s/tracks?uris=%s"%(id,uris),headers=self.headers)
         return response.json()
 
-    def get_user_playlists(self):
+    def get_user_playlists(self,token):
+        self.headers = {
+        'Authorization': 'Bearer %s'%token,
+            }
         response = requests.get('https://api.spotify.com/v1/me/playlists',headers=self.headers)
         return response.json()
     

@@ -13,7 +13,7 @@ client_id = os.getenv("CLIENT")
 client_secret = os.getenv("SECRET")
 app.secret_key = os.getenv("SESSIONSECRET")
 
-redirect_uri = 'http://localhost:5000/callback' #https://WebSpotify.jadenleake.repl.co/callback
+redirect_uri = 'https://WebSpotify.jadenleake.repl.co/callback' #https://WebSpotify.jadenleake.repl.co/callback
 
 spotify = spotify_api(
     client_id, client_secret,
@@ -28,35 +28,34 @@ def starter():
     return render_template("login.html", url=authorize)
 
 
-@app.route('/callback')
-def main():
-    #find_code = request.url.find("?code=")
-    exchange_code = request.args.get('code')  # Parse the code from callback url
-    try:
-        if spotify.get_access_token(exchange_code)['error'] == 'invalid_grant':
-            return redirect(url_for('starter'))
-    except:
-        pass
-
-    song_data = spotify.get_user_tracks()
-    user = spotify.get_user()
-    session['username'] = user['display_name']
+@app.route('/home')
+def home():
+    song_data = spotify.get_user_tracks(session['code'])
+    username = spotify.get_user(session['code'])['display_name']
     try:
         if song_data['error']['status'] == 401:
             return redirect(url_for('starter'))
     except:
         pass
 
-    return render_template('callback.html',data=song_data['items'],user=session['username'])
+    return render_template('callback.html',data=song_data['items'],name=username)
+
+@app.route('/callback')
+def main():
+    #find_code = request.url.find("?code=")
+    exchange_code = request.args.get('code')  # Parse the code from callback url
+    session['code'] = spotify.get_access_token(exchange_code)
+    return redirect(url_for('home'))
+    
 
 @app.route('/makeplaylist')
 def make_playlist():
-    user = spotify.get_user()
+    user = spotify.get_user(session['code'])
     user_id = user['id']
     top_playlist = spotify.make_playlist(
-        user_id, "Top Songs", "Here are your most listened to songs!")
+        user_id, "Top Songs", "Here are your most listened to songs!",session['code'])
     songs = request.args.get('s')
-    spotify.fill_playlist(top_playlist['id'], songs)
+    spotify.fill_playlist(top_playlist['id'], songs, session['code'])
     return "Your playlist has been made! <a href='/playlistdata?playlist=%s'>Click here to view it!</a>" % top_playlist[
         'uri']
 
@@ -66,7 +65,7 @@ def make_search():
     search = request.args.get("s")
     if search == '':
         search = "none"
-    get_tracks = spotify.search_track(search)
+    get_tracks = spotify.search_track(search,session['code'])
     return render_template('search.html',data=get_tracks['tracks']['items'])
 
 
@@ -77,7 +76,7 @@ def audio_features(feat=None, img=None, artist=None, name=None):
     artist = request.args.get("artist")
     name = request.args.get('name')
 
-    song_features = spotify.get_analysis(song_id)
+    song_features = spotify.get_analysis(song_id,session['code'])
 
     dance = float(song_features['danceability']) * 100
     energy = float(song_features['energy']) * 100
@@ -98,7 +97,7 @@ def audio_features(feat=None, img=None, artist=None, name=None):
 def playlists():
     playlist = request.args.get("playlist")
     playlist_id = playlist[17::]
-    playlist_data = spotify.get_playlist(playlist_id)
+    playlist_data = spotify.get_playlist(playlist_id,session['code'])
     next_playlist = parse_json.extract_values(playlist_data, 'next')
     num_tracks = playlist_data['tracks']['total']
 
@@ -116,7 +115,7 @@ def playlists():
         song_artist.append(songs['track']['artists'][0]['name'])
         song_id.append(songs['track']['id'])
 
-    song_analysis = spotify.get_analysis(song_id)
+    song_analysis = spotify.get_analysis(song_id,session['code'])
     dance, energy, instrumentalness, valence = [], [], [], []  # Get audio analysis of songs
     for analysis in song_analysis['audio_features']:
         dance.append(analysis['danceability'])
@@ -126,7 +125,7 @@ def playlists():
 
     duration_ms = 0
     while next_playlist[0] != None:  # If the playlist is larger than 100 songs this will be able to get each "page"
-        next_page = spotify.get_next_playlist(next_playlist[0])
+        next_page = spotify.get_next_playlist(next_playlist[0],session['code'])
         temp_id.clear()
         for songs in next_page['items']:
             song_names.append(songs['track']['name'])
@@ -136,7 +135,7 @@ def playlists():
             temp_id.append(songs['track']['id'])
             duration_ms += int(songs['track']['duration_ms'])
 
-        song_analysis = spotify.get_analysis(temp_id)
+        song_analysis = spotify.get_analysis(temp_id,session['code'])
         for analysis in song_analysis['audio_features']:
             dance.append(analysis['danceability'])
             energy.append(analysis['energy'])
@@ -215,7 +214,7 @@ def playlists():
 def tracks():
     track = request.args.get('track')
     track_id = track[14::]
-    track_data = spotify.search_trackid(track_id)
+    track_data = spotify.search_trackid(track_id,session['code'])
 
     try:
         if track_data['error']['status'] == 401:
@@ -238,7 +237,7 @@ def tracks():
 
 @app.route('/viewplaylists')
 def view_playlists():
-    user_playlists = spotify.get_user_playlists()
+    user_playlists = spotify.get_user_playlists(session['code'])
     
     return render_template('viewplaylists.html',data=user_playlists['items'])
 
@@ -253,8 +252,8 @@ def display_recommended(dance=None, energy=None, instrumental=None, valence=None
     instrumental = int(request.args.get("instrumental")) / 100
     valence = int(request.args.get('valence')) / 100
 
-    song_data = spotify.get_user_tracks()
-    song_artist_data = spotify.get_user_artists()
+    song_data = spotify.get_user_tracks(session['code'])
+    song_artist_data = spotify.get_user_artists(session['code'])
     song_artist, song_id, song_genre = [], [], []
 
     for songs in song_data['items']:
@@ -282,7 +281,7 @@ def display_recommended(dance=None, energy=None, instrumental=None, valence=None
     
     genres = song_genre.replace(" ","%20")
 
-    recommended = spotify.get_user_recommendations(song_artist,song_id,genres,dance=dance,energy=energy,instrumental=instrumental,valence=valence)
+    recommended = spotify.get_user_recommendations(song_artist,song_id,genres,session['code'],dance=dance,energy=energy,instrumental=instrumental,valence=valence)
 
     return render_template('recommendedplaylist.html',data=recommended['tracks'])
 
@@ -290,13 +289,13 @@ def display_recommended(dance=None, energy=None, instrumental=None, valence=None
 def make_recommended_playlist():
     tracks = request.args.get('tracks')
     print("Tracks",tracks)
-    user = spotify.get_user()
+    user = spotify.get_user(session['code'])
     user_id = user['id']
     recommended_playlist = spotify.make_playlist(
-    user_id, "Recommended Songs", "Here are your recommended songs!")
-    spotify.fill_playlist(recommended_playlist['id'], tracks)
+    user_id, "Recommended Songs", "Here are your recommended songs!",session['code'])
+    spotify.fill_playlist(recommended_playlist['id'], tracks,session['code'])
     return "Playlist has been made, check your spotify! You can close this tab."
 
 
 if __name__ == "__main__":
-    app.run() #host='0.0.0.0'
+    app.run(host='0.0.0.0') #host='0.0.0.0'
