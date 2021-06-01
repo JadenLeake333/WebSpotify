@@ -260,7 +260,6 @@ def convert_playlist():
       title = video_by_id['video_title']
 
       title = title[0:title.find("(")]
-      if title.find(video_by_id)
       tracks.append(spotify.search_track(title,session['code']))
 
     user = spotify.get_user(session['code'])
