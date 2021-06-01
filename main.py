@@ -1,10 +1,10 @@
-from flask import Flask, request, redirect, url_for, render_template,session
-from spotifyAPI import spotify_api
 import os
-from parseJSON import parse_json
+
 from dotenv import load_dotenv
-
-
+from parseJSON import parse_json
+from spotifyAPI import spotify_api
+from youtube_api import YoutubeDataApi
+from flask import Flask, request, redirect, url_for, render_template,session
 
 app = Flask(__name__)
 load_dotenv() #Get env variables
@@ -12,7 +12,7 @@ load_dotenv() #Get env variables
 client_id = os.getenv("CLIENT")
 client_secret = os.getenv("SECRET")
 app.secret_key = os.getenv("SESSIONSECRET")
-
+youtubeAPI = YoutubeDataApi(os.getenv("UTUBEAPIKEY"))
 redirect_uri = 'https://WebSpotify.jadenleake.repl.co/callback' #https://WebSpotify.jadenleake.repl.co/callback
 
 spotify = spotify_api(
@@ -45,6 +45,7 @@ def main():
     #find_code = request.url.find("?code=")
     exchange_code = request.args.get('code')  # Parse the code from callback url
     session['code'] = spotify.get_access_token(exchange_code)
+    print("sesh",session['code'])
     return redirect(url_for('home'))
     
 
@@ -53,7 +54,7 @@ def make_playlist():
     user = spotify.get_user(session['code'])
     user_id = user['id']
     top_playlist = spotify.make_playlist(
-        user_id, "Top Songs", "Here are your most listened to songs!",session['code'])
+        user_id, "Top Songs", "Here are your most listened to songs!", session['code'])
     songs = request.args.get('s')
     spotify.fill_playlist(top_playlist['id'], songs, session['code'])
     return "Your playlist has been made! <a href='/playlistdata?playlist=%s'>Click here to view it!</a>" % top_playlist[
@@ -245,6 +246,36 @@ def view_playlists():
 def recommend_songs():
     return render_template('recommend.html')
 
+@app.route('/converttospotify', methods=['GET','POST'])
+def convert_playlist():
+  if request.method == "POST":
+    playlistLink = request.form['playlist']
+    playlistID = playlistLink.replace("https://youtube.com/playlist?list=", "")
+
+    result = youtubeAPI.get_videos_from_playlist_id(playlistID)
+    tracks, add_to_playlist= [], []
+    
+    for ids in result:
+      video_by_id = youtubeAPI.get_video_metadata(ids['video_id'])
+      title = video_by_id['video_title']
+
+      title = title[0:title.find("(")]
+      if title.find(video_by_id)
+      tracks.append(spotify.search_track(title,session['code']))
+
+    user = spotify.get_user(session['code'])
+    user_id = user['id']
+    youtube_playlist = spotify.make_playlist(
+        user_id, "YouTube to Spotify" , "YouTube to Spotify", session['code'])
+
+    for track in tracks:
+     add_to_playlist.append(track['tracks']['items'][0]['uri'])
+
+    new_playlist = spotify.fill_playlist(youtube_playlist['id'], add_to_playlist, session['code'])
+    return render_template('youtubespotify.html')
+  else:
+    return render_template('youtubespotify.html')
+
 @app.route('/recommendedsongs')
 def display_recommended(dance=None, energy=None, instrumental=None, valence=None):
     dance = int(request.args.get("dance")) / 100
@@ -255,6 +286,8 @@ def display_recommended(dance=None, energy=None, instrumental=None, valence=None
     song_data = spotify.get_user_tracks(session['code'])
     song_artist_data = spotify.get_user_artists(session['code'])
     song_artist, song_id, song_genre = [], [], []
+
+    print(song_data)
 
     for songs in song_data['items']:
         song_artist.append(songs['artists'][0]['id'])

@@ -141,14 +141,12 @@ class spotify_api():
         #User id, Playlist name and description
         self.headers = {
         'Authorization': 'Bearer %s'%token,
+        "Content-Type":"application/json"
             }
-        playlist_header = {
-            "Authorization" : "Bearer %s"%self.token, 
-            "Content-Type":"application/json"
-        }
+
         playlist_data = '{"name":"%s","description":"%s"}' %(name,desc)
         
-        response = requests.post('https://api.spotify.com/v1/users/%s/playlists'%(id),headers=playlist_header,data=playlist_data)
+        response = requests.post('https://api.spotify.com/v1/users/%s/playlists'%(id),headers=self.headers,data=playlist_data)
         return response.json()
 
     def get_user(self,token):
@@ -162,6 +160,8 @@ class spotify_api():
         self.headers = {
         'Authorization': 'Bearer %s'%token,
             }
+        if type(uris) == list:
+          uris = ",".join(uris)
         response = requests.post("https://api.spotify.com/v1/playlists/%s/tracks?uris=%s"%(id,uris),headers=self.headers)
         return response.json()
 
