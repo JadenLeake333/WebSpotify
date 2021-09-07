@@ -1,0 +1,42 @@
+<html>
+  <head>
+      <title>Spotify Data</title>
+      <link href="static/bootstrap.min.css" rel="stylesheet">
+      <link href="static/cover.css" rel="stylesheet">
+  </head>
+  <body class="d-flex h-100 justify-content-center text-center text-white bg-dark">
+      <div>
+          {{navbar | safe}}
+          <div class="input-group mb-3">
+              <input type="text" id='search' placeholder="Paste the link of a song or playlist here! Or just search a name!" class="form-control" aria-describedby="button-addon2">
+              <button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="makeSearch()">Search</button>
+          </div>        
+          <h1>{{name}}</h1>
+          <h2>Tracks: {{playlistLength}}</h2>
+          <div class='container overflow-auto cont' style='width: 100%%; height: 65%%;'>
+            <div class='container overflow-auto cont' style='width: 100%%; height: 65%%;'>   
+                {{table | safe}}
+            </div>
+          </div>
+          <h1>Danceability</h1>
+          <div class="progress">
+              <div class="progress-bar" role="progressbar" style="width: {{ dance }}%" aria-valuemin="0" aria-valuemax="1">{{ dance }}</div>
+          </div>
+          <br>
+          <h1>Energy</h1>
+          <div class="progress">
+              <div class="progress-bar" role="progressbar" style="width:{{ energy }}%" aria-valuemin="0" aria-valuemax="100">{{ energy }} </div>      
+          </div>
+          <br>
+          <h1>Instrumentalness</h1>
+          <div class="progress">
+              <div class="progress-bar" role="progressbar" style="width: {{instrumental}}% " aria-valuemin="0" aria-valuemax="100">{{instrumental}} </div>
+          </div>
+          <h1>Valence</h1>
+          <div class="progress">
+              <div class="progress-bar" role="progressbar" style="width: {{ valence }}%" aria-valuemin="0" aria-valuemax="100">{{valence}}</div>
+          </div>
+      </div>
+          <script type='text/javascript' src='static/search.js'></script>
+  </body>
+</html>

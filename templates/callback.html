@@ -6,12 +6,7 @@
         </head>
         <body class="d-flex h-100 justify-content-center text-center text-white bg-dark">
         <div>
-            <header class="mb-auto">
-                <nav class="nav nav-masthead justify-content-center float-md-end">
-                    <a class="nav-link fs-2" href='/viewplaylists'>My playlists</a>
-                    <a class="nav-link fs-2" href='/recommend'>Recommendations</a>
-                </nav>
-            </header>
+            {{navbar | safe}}
             <div>
                 <div class="input-group mb-3">
                     <input type="text" id='search' placeholder="Paste the link of a song or playlist here! Or just search a name!" class="form-control" aria-describedby="button-addon2">

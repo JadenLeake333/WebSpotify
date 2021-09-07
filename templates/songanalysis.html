@@ -6,12 +6,7 @@
     </head>
     <body class="d-flex text-center text-white bg-dark">
         <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
-            <header class="mb-1">
-                <nav class="nav nav-masthead justify-content-center float-md-end">
-                    <a class="nav-link fs-2" href='/search'>Search</a>
-                    <a class="nav-link fs-2" href='/viewplaylists'>My playlists</a>
-                </nav>
-            </header>
+            {{navbar | safe}}
             <div>
                 <div class="input-group mb-3">
                     <input type="text" id='search' class="form-control" aria-describedby="button-addon2">
