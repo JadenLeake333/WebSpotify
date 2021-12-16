@@ -4,7 +4,7 @@ import navbar
 from dotenv import load_dotenv
 from parseJSON import parse_json
 from spotifyAPI import spotify_api
-from youtube_api import YoutubeDataApi
+# from youtube_api import YoutubeDataApi
 from flask import Flask, request, redirect, url_for, render_template, session
 
 app = Flask(__name__)
@@ -13,8 +13,8 @@ load_dotenv() #Get env variables
 client_id = os.getenv("CLIENT")
 client_secret = os.getenv("SECRET")
 app.secret_key = os.getenv("SESSIONSECRET")
-youtubeAPI = YoutubeDataApi(os.getenv("UTUBEAPIKEY"))
-redirect_uri = 'https://WebSpotify.jadenleake.repl.co/callback'
+# youtubeAPI = YoutubeDataApi(os.getenv("UTUBEAPIKEY"))
+redirect_uri = 'http://localhost:5000/callback' #https://WebSpotify.jadenleake.repl.co/callback
 
 spotify = spotify_api(
     client_id, 
@@ -69,14 +69,16 @@ def make_playlist():
       user_id, 
       "Top Songs", 
       "Here are your most listened to songs!", 
-      session['code'])
+      session['code']
+    )
 
   songs = request.args.get('s')
 
   spotify.fill_playlist(
     top_playlist['id'], 
     songs, 
-    session['code'])
+    session['code']
+  )
 
   return "Your playlist has been made! <a href='/playlistdata?playlist=%s'>Click here to view it!</a>" % top_playlist['uri']
 
@@ -87,13 +89,17 @@ def make_search():
     return redirect(url_for('login'))
 
   search = request.args.get("s")
+
   if search == '':
       search = "none"
+
   get_tracks = spotify.search_track(search,session['code'])
+
   return render_template(
     'search.html',
     data=get_tracks['tracks']['items'],
-    navbar=nav)
+    navbar=nav
+  )
 
 @app.route('/features')
 def audio_features(feat=None, img=None, artist=None, name=None):
@@ -110,6 +116,7 @@ def audio_features(feat=None, img=None, artist=None, name=None):
 
   if 'error' in song_features.keys():
     return "No information on %s!" %name
+
   else:
     dance = float(song_features['danceability']) * 100
     energy = float(song_features['energy']) * 100
@@ -125,7 +132,8 @@ def audio_features(feat=None, img=None, artist=None, name=None):
     energy=energy,
     instrumentalness=instrumentalness,
     valence=valence,
-    navbar=nav)
+    navbar=nav
+  )
 
 @app.route('/playlistdata')
 def playlists():
@@ -142,26 +150,37 @@ def playlists():
 
   playlist_name = playlist_data['name']
 
-  temp_id, song_names, song_img, song_artist, song_id = [], [], [], [], []  # Get images, names, artists and song ids of playlist
-  for songs in playlist_data['tracks']['items']:
-      song_names.append(songs['track']['name'])
-      song_img.append(songs['track']['album']['images'][0]['url'])
-      song_artist.append(songs['track']['artists'][0]['name'])
-      song_id.append(songs['track']['id'])
+  temp_id = []  # Get images, names, artists and song ids of playlist
+
+  song_names = [song['track']['name'] for song in playlist_data['tracks']['items']]
+  song_img = [song['track']['album']['images'][0]['url'] for song in playlist_data['tracks']['items']]
+  song_artist = [song['track']['artists'][0]['name'] for song in playlist_data['tracks']['items']]
+  song_id = [song['track']['id'] for song in playlist_data['tracks']['items']]
+
+  # for songs in playlist_data['tracks']['items']:
+  #     song_names.append(songs['track']['name'])
+  #     song_img.append(songs['track']['album']['images'][0]['url'])
+  #     song_artist.append(songs['track']['artists'][0]['name'])
+  #     song_id.append(songs['track']['id'])
 
   song_analysis = spotify.get_analysis(song_id,session['code'])
-  dance, energy, instrumentalness, valence = [], [], [], []  # Get audio analysis of songs
-  for analysis in song_analysis['audio_features']:
-    if analysis:
-      dance.append(analysis['danceability'])
-      energy.append(analysis['energy'])
-      instrumentalness.append(analysis['instrumentalness'])
-      valence.append(analysis['valence'])
+
+  dance = [data['danceability'] for data in song_analysis['audio_features']]
+  energy = [data['energy'] for data in song_analysis['audio_features']]
+  instrumentalness = [data['instrumentalness'] for data in song_analysis['audio_features']]
+  valence = [data['valence'] for data in song_analysis['audio_features']]
+  # for analysis in song_analysis['audio_features']:
+  #   if analysis:
+  #     dance.append(analysis['danceability'])
+  #     energy.append(analysis['energy'])
+  #     instrumentalness.append(analysis['instrumentalness'])
+  #     valence.append(analysis['valence'])
 
   duration_ms = 0
   while next_playlist[0] != None:  # If the playlist is larger than 100 songs this will be able to get each "page"
       next_page = spotify.get_next_playlist(next_playlist[0],session['code'])
       temp_id.clear()
+
       for songs in next_page['items']:
           song_names.append(songs['track']['name'])
           song_img.append(songs['track']['album']['images'][0]['url'])
@@ -171,6 +190,7 @@ def playlists():
           duration_ms += int(songs['track']['duration_ms'])
 
       song_analysis = spotify.get_analysis(temp_id,session['code'])
+
       for analysis in song_analysis['audio_features']:
           dance.append(analysis['danceability'])
           energy.append(analysis['energy'])
@@ -181,15 +201,14 @@ def playlists():
 
   dance_avg = (sum(dance) / len(dance)) * 100
   energy_avg = (sum(energy) / len(energy)) * 100
-  instrumentalness_avg = (sum(instrumentalness) /
-                          len(instrumentalness)) * 100
+  instrumentalness_avg = (sum(instrumentalness) / len(instrumentalness)) * 100
   valence_avg = (sum(valence) / len(valence)) * 100
 
   table = "<div class='row'>"
   for idx, names in enumerate(song_names):
       if names.find("'"):
         names = names.replace("'","")
-      table += "<div class='col child'><tr><figure><td><a href='/features?feat=%s&img=%s&artist=%s&name=%s'><img src='%s' width='250' height='250'></a></td><figcaption><td>%s</td><br><td>%s</td></figcaption></figure></tr></div>" % (
+        table += "<div class='col child'><tr><figure><td><a href='/features?feat=%s&img=%s&artist=%s&name=%s'><img src='%s' width='250' height='250'></a></td><figcaption><td>%s</td><br><td>%s</td></figcaption></figure></tr></div>" % (
           song_id[idx], song_img[idx], song_artist[idx], names,
           song_img[idx], song_artist[idx], names)
   table += "</div>"
@@ -203,7 +222,7 @@ def playlists():
     instrumental = instrumentalness_avg,
     valence = valence_avg,
     navbar = nav,
-    )
+  )
 
 @app.route('/searchtrack')
 def tracks():
@@ -219,6 +238,7 @@ def tracks():
   img = track_data['album']['images'][0]['url']
   artist = track_data['artists'][0]['name']
 
+  # Regex this
   if name.find("'"):
     name = name.replace("'","")
 
@@ -228,8 +248,9 @@ def tracks():
       feat=track_id,
       img=img,
       artist=artist,
-      name=name))
-
+      name=name
+    )
+  )
 
 @app.route('/viewplaylists')
 def view_playlists():
@@ -242,7 +263,8 @@ def view_playlists():
   return render_template(
     'viewplaylists.html',
     data=user_playlists['items'],
-    navbar=nav)
+    navbar=nav
+  )
 
 @app.route('/recommend')
 def recommend_songs():
@@ -252,56 +274,57 @@ def recommend_songs():
 
   return render_template(
     'recommend.html',
-    navbar=nav)
+    navbar=nav
+  )
 
-@app.route('/converttospotify', methods=['GET','POST'])
-def convert_playlist():
+# @app.route('/converttospotify', methods=['GET','POST'])
+# def convert_playlist():
 
-  if 'code' not in session.keys():
-      return redirect(url_for('login'))
+#   if 'code' not in session.keys():
+#       return redirect(url_for('login'))
 
-  if request.method == "POST":
-    playlistLink = request.form['playlist']
-    playlistID = playlistLink.replace("https://youtube.com/playlist?list=", "")
+#   if request.method == "POST":
+#     playlistLink = request.form['playlist']
+#     playlistID = playlistLink.replace("https://youtube.com/playlist?list=", "")
 
-    result = youtubeAPI.get_videos_from_playlist_id(playlistID)
-    tracks, add_to_playlist= [], []
+#     result = youtubeAPI.get_videos_from_playlist_id(playlistID)
+#     tracks, add_to_playlist= [], []
     
-    for ids in result:
-      video_by_id = youtubeAPI.get_video_metadata(ids['video_id'])
-      if 'video_title' in video_by_id:
-        title = video_by_id['video_title']
+#     for ids in result:
+#       video_by_id = youtubeAPI.get_video_metadata(ids['video_id'])
+#       if 'video_title' in video_by_id:
+#         title = video_by_id['video_title']
 
-        title = title[0:title.find("(")]
-        tracks.append(spotify.search_track(title,session['code']))
+#         title = title[0:title.find("(")]
+#         tracks.append(spotify.search_track(title,session['code']))
 
-    user = spotify.get_user(session['code'])
-    user_id = user['id']
+#     user = spotify.get_user(session['code'])
+#     user_id = user['id']
 
-    youtube_playlist = spotify.make_playlist(
-        user_id, 
-        "YouTube to Spotify", 
-        "YouTube to Spotify", 
-        session['code'])
+#     youtube_playlist = spotify.make_playlist(
+#         user_id, 
+#         "YouTube to Spotify", 
+#         "YouTube to Spotify", 
+#         session['code'])
 
-    for track in tracks:
-      try:
-        add_to_playlist.append(track['tracks']['items'][0]['uri'])
-      except:
-        continue
+#     for track in tracks:
+#       try:
+#         add_to_playlist.append(track['tracks']['items'][0]['uri'])
+#       except:
+#         continue
 
-    new_playlist = spotify.fill_playlist(
-      youtube_playlist['id'], 
-      add_to_playlist, 
-      session['code'])
+#     new_playlist = spotify.fill_playlist(
+#       youtube_playlist['id'], 
+#       add_to_playlist, 
+#       session['code'])
 
-    return render_template(
-      'youtubespotify.html',
-      navbar=nav)
-  else:
-    return render_template(
-      'youtubespotify.html',
-      navbar=nav)
+#     return render_template(
+#       'youtubespotify.html',
+#       navbar=nav)
+#   else:
+#     return render_template(
+#       'youtubespotify.html',
+#       navbar=nav)
 
 @app.route('/recommendedsongs')
 def display_recommended(dance=None, energy=None, instrumental=None, valence=None):
@@ -318,9 +341,11 @@ def display_recommended(dance=None, energy=None, instrumental=None, valence=None
   song_artist_data = spotify.get_user_artists(session['code'])
   song_artist, song_id, song_genre = [], [], []
 
-  for songs in song_data['items']:
-      song_artist.append(songs['artists'][0]['id'])
-      song_id.append(songs['id'])
+  song_artist = [song['artists'][0]['id'] for song in song_data['items']]
+  song_id = [song['id'] for song in song_data['items']]
+  # for songs in song_data['items']:
+  #     song_artist.append(songs['artists'][0]['id'])
+  #     song_id.append(songs['id'])
 
   for songs in song_artist_data['items']: 
       song_genre.append(songs['genres'][0])
@@ -340,7 +365,6 @@ def display_recommended(dance=None, energy=None, instrumental=None, valence=None
   tracks=','.join(song_id)
   genres=','.join(song_genre)
   '''
-  
   genres = song_genre.replace(" ","%20")
 
   recommended = spotify.get_user_recommendations(
@@ -352,7 +376,8 @@ def display_recommended(dance=None, energy=None, instrumental=None, valence=None
     energy=energy,
     instrumental=instrumental,
     valence=valence,
-    navbar=nav)
+    navbar=nav
+  )
 
   return render_template('recommendedplaylist.html', data=recommended['tracks'])
 
@@ -371,14 +396,15 @@ def make_recommended_playlist():
     user_id, 
     "Recommended Songs", 
     "Here are your recommended songs!",
-    session['code'])
+    session['code']
+  )
 
   spotify.fill_playlist(
     recommended_playlist['id'], 
-    tracks,session['code'])
+    tracks,session['code']
+  )
 
   return "Playlist has been made, check your spotify! You can close this tab."
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0') #host='0.0.0.0'
