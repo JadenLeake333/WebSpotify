@@ -1,45 +1,50 @@
 <html>
     <head>
         <title>Spotify Data</title>
-        <link href="static/bootstrap.min.css" rel="stylesheet">
-        <link href="static/cover.css" rel="stylesheet">
+        <link href="static/css/bootstrap.min.css" rel="stylesheet">
+        <link href="static/css/cover.css" rel="stylesheet">
     </head>
-    <body class="d-flex text-center text-white bg-dark">
-        <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
-            {{navbar | safe}}
-            <div>
-                <div class="input-group mb-3">
-                    <input type="text" id='search' class="form-control" aria-describedby="button-addon2">
-                    <button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="makeSearch()">Search</button>
-                </div>        
+    <body class="box-shadow text-center text-white bg-dark">
+        <div class='d-flex flex-column'>
+            <div class="navigation">
+                {{navbar | safe}}
             </div>
-            <div style ="display: inline;">
-                <img src='{{img}}' width="250" height='250'>
-                <h3>{{artist}}</h3>
-                <h3>{{name}}</h3>
-            </div>
-            <br>
-            <div>
-                <h1>Danceability</h1>
-                <div class="progress">
-                    <div class="progress-bar" role="progressbar" style="width: {{dance}}%" aria-valuemin="0" aria-valuemax="1">{{dance}}%</div>
+            <div class="d-flex flex-row justify-content-center">
+                <div class="feature d-flex justify-content-end">
+                    <div>
+                        <img src='{{img}}' width="250" height='250'>
+                        <h3>{{artist}}</h3>
+                        <h3>{{name}}</h3>
+                    </div>
                 </div>
-                <br>
-                <h1>Energy</h1>
-                <div class="progress">
-                    <div class="progress-bar" role="progressbar" style="width: {{energy}}%" aria-valuemin="0" aria-valuemax="100">{{energy}}%</div>      
-                </div>
-                <br>
-                <h1>Instrumentalness</h1>
-                <div class="progress">
-                    <div class="progress-bar" role="progressbar" style="width: {{instrumentalness}}%" aria-valuemin="0" aria-valuemax="100">{{instrumentalness}}%</div>
-                </div>
-                <h1>Valence</h1>
-                <div class="progress">
-                    <div class="progress-bar" role="progressbar" style="width: {{valence}}%" aria-valuemin="0" aria-valuemax="100">{{valence}}%</div>
+                <div class="d-flex flex-column w-50 me-3 ms-3">
+                    <div>
+                        <h1>Danceability</h1>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{dance}}%" aria-valuemin="0" aria-valuemax="1">{{dance}}%</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h1>Energy</h1>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{energy}}%" aria-valuemin="0" aria-valuemax="100">{{energy}}%</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h1>Instrumentalness</h1>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{instrumentalness}}%" aria-valuemin="0" aria-valuemax="100">{{instrumentalness}}%</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h1>Valence</h1>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{valence}}%" aria-valuemin="0" aria-valuemax="100">{{valence}}%</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-            <script type='text/javascript' src='static/search.js'></script>
+        <script type='text/javascript' src='static/js/search.js'></script>
     </body>
 </html>

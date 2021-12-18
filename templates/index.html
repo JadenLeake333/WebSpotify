@@ -7,16 +7,12 @@
               crossorigin="anonymous">
     </head>
     <body>
-    <div>
+    <div class="navigation">
         {{navbar | safe}}
     </div>
     <div>
         <h1>Enter a track name or <a href='https://community.spotify.com/t5/Spotify-Answers/What-s-a-Spotify-URI/ta-p/919201'>spotify playlist uri</a> here!</h1>
-        <div class="input-group mb-3">
-            <input type="text" id='search' class="form-control" aria-describedby="button-addon2">
-            <button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="makeSearch()">Search</button>
-        </div>        
     </div>
-        <script type='text/javascript' src='static/search.js'></script>
+        <script type='text/javascript' src='static/js/search.js'></script>
     </body>
 </html>

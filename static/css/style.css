@@ -1,0 +1,24 @@
+h1{
+    text-align: center;
+}
+
+.cont{
+    height: 450px;
+    scroll-snap-points-y: repeat(314px);
+}
+
+.child{
+    scroll-snap-align: start;
+}
+
+.enlarge {
+    transition: 1s;
+}
+.enlarge:hover {
+    transform: scaleX(1.1);
+}
+
+h2:hover {
+    color: white;
+
+}

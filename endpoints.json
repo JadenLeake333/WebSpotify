@@ -1,7 +1,6 @@
 {
   "Home": "/home",
   "Search": "/search",
-  "View_Playlists": "/viewplaylists",
-  "Convert_to_Spotify": "/converttospotify",
+  "View Playlists": "/viewplaylists",
   "Logout": "/logout"
 }
