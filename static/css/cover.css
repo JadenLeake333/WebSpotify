@@ -63,3 +63,12 @@ h1{
 h5{
   display:none;
 }
+
+th {
+  font-size: 2rem;
+  font-weight: 200;
+}
+
+td {
+  font-size: 1.25rem;
+}

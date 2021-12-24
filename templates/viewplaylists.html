@@ -10,9 +10,10 @@
         {{navbar | safe}}
     </div>
     <div class='container cont overflow-scroll h-75'>
+        <h1>Your playlists:</h1>
         <div class='row'>
             {%for playlists in data%}
-            <div class='col enlarge m-1'> 
+            <div class='col text-center enlarge m-1'> 
                 {%if playlists['images'] | length == 0 %}
                     {% set image = '../static/assets/unknown.png' %} 
                 {%else%}
@@ -20,7 +21,7 @@
                 {% endif %}
                 <figure>
                     <a href="/playlistdata?playlist={{playlists['uri']}}"><img src="{{image}}" height='300px' width='300px'></a>
-                    <figcaption>{{playlists['name']}}</figcaption>
+                    <figcaption><h3>{{playlists['name']}}</h3></figcaption>
                 </figure>
             </div>
             {% endfor %}
