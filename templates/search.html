@@ -13,7 +13,7 @@
             <table class="table table-striped table-dark"><tr><th></th><th>Artist</th><th>Song Name</th><th>Preview</th></tr>
                 {%for songs in data%}
                 <tr>
-                    <td><a href="/features?feat={{songs['id']}}&img={{songs['album']['images'][0]['url']}}&artist={{songs['artists'][0]['name']}}&name={{songs['name']}}"><img src="{{songs['album']['images'][0]['url']}}" width='75' height='75'></a></td>
+                    <td><a href="/features/{{songs['id']}}"><img src="{{songs['album']['images'][0]['url']}}" width='75' height='75'></a></td>
                     <td>{{songs['artists'][0]['name']}}</td>
                     <td>{{songs['name']}}</td>
                     <td><audio controls src="{{songs['preview_url']}}"></td>

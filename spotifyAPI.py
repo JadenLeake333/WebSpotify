@@ -165,10 +165,10 @@ class spotify_api():
         response = requests.post("https://api.spotify.com/v1/playlists/%s/tracks?uris=%s"%(id,uris),headers=self.headers)
         return response.json()
 
-    def get_user_playlists(self,token):
+    def get_user_playlists(self,limit,token):
         self.headers = {
-        'Authorization': 'Bearer %s'%token,
+        'Authorization': f'Bearer {token}',
             }
-        response = requests.get('https://api.spotify.com/v1/me/playlists',headers=self.headers)
+        response = requests.get(f'https://api.spotify.com/v1/me/playlists?limit={limit}',headers=self.headers)
         return response.json()
     

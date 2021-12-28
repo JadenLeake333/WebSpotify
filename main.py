@@ -47,7 +47,7 @@ def home():
 
   return render_template(
     'callback.html',
-    data=song_data['items'],
+    data=song_data['items'], # Using Jinja template engine
     name=username,
     navbar=nav
   )
@@ -59,7 +59,6 @@ def main():
 
   return redirect(url_for('home'))
 
-# Not currently in use  
 @app.route('/makeplaylist')
 def make_playlist():
   if 'code' not in session.keys():
@@ -127,18 +126,50 @@ def audio_features(track_id):
       navbar           = nav
     )
 
-@app.route('/playlistdata')
-def playlists():
+@app.route('/playlists')
+def view_playlists():
   if 'code' not in session.keys():
     return redirect(url_for('login'))
 
-  playlist = request.args.get("playlist")
-  playlist_id = playlist[17::]
+  user_playlists = spotify.get_user_playlists(50,session['code'])
+  next_playlist = parse_json.extract_values(user_playlists, 'next')
+
+  while next_playlist[0]:
+    next_page = spotify.get_next_playlist(next_playlist[0],session['code'])
+
+    for item in next_page['items']:
+      user_playlists['items'].append(item)
+
+    next_playlist = parse_json.extract_values(next_page, 'next')
+
+  return render_template(
+    'viewplaylists.html',
+    data=user_playlists['items'],
+    navbar=nav
+  )
+
+@app.route('/playlist/<playlist_id>')
+def playlists(playlist_id):
+  if 'code' not in session.keys():
+    return redirect(url_for('login'))
 
   playlist_data = spotify.get_playlist(playlist_id,session['code'])
 
   if check_error(playlist_data):
     return render_template("error.html", navbar=nav)
+
+  if playlist_data['tracks']['total'] == 0:
+    return render_template('playlistdata.html', 
+      name = "No songs to display! Try adding songs to the playlist!",
+      playlistLength = 0,
+      display_analysis = "none",
+      table = "",
+      dance = 0,
+      energy = 0,
+      instrumental = 0,
+      valence = 0,
+      navbar = nav,
+    )
 
   next_playlist = parse_json.extract_values(playlist_data, 'next')
   num_tracks = playlist_data['tracks']['total']
@@ -170,7 +201,7 @@ def playlists():
     #     valence.append(analysis['valence'])
 
   duration_ms = 0
-  while next_playlist[0] != None:  # If the playlist is larger than 100 songs this will be able to get each "page"
+  while next_playlist[0]:  # If the playlist is larger than 100 songs this will be able to get each "page"
       next_page = spotify.get_next_playlist(next_playlist[0],session['code'])
       temp_id.clear()
 
@@ -201,10 +232,10 @@ def playlists():
       next_playlist = parse_json.extract_values(next_page, 'next')
 
   if len(dance) > 0:
-    dance_avg = (sum(dance) / len(dance)) * 100
-    energy_avg = (sum(energy) / len(energy)) * 100
-    instrumentalness_avg = (sum(instrumentalness) / len(instrumentalness)) * 100
-    valence_avg = (sum(valence) / len(valence)) * 100
+    dance_avg = round((sum(dance) / len(dance)) * 100)
+    energy_avg = round((sum(energy) / len(energy)) * 100)
+    instrumentalness_avg = round((sum(instrumentalness) / len(instrumentalness)) * 100)
+    valence_avg = round((sum(valence) / len(valence)) * 100)
   else:
     dance_avg, energy_avg, instrumentalness_avg, valence_avg = 0,0,0,0
 
@@ -213,9 +244,9 @@ def playlists():
       # if names.find("'"):
       #   names = names.replace("'","")
       if song_id[idx] == "":
-        table += f"<div class='enlarge col'><tr><figure><td><img src='{song_img[idx]}' width='250' height='250'></td><figcaption><td>{song_artist[idx]}</td><br><td>{names}</td></figcaption></figure></tr></div>"
+        table += f"<div class='enlarge col'><figure><img src='../static/assets/unknown.png' width='250' height='250'><figcaption><h3>{song_artist[idx]}<br>{names}</h3></figcaption></figure></div>"
       else:
-        table += f"<div class='enlarge col'><tr><figure><td><a href='/features?feat={song_id[idx]}&img={song_img[idx]}&artist={song_artist[idx]}&name={names}'><img src='{song_img[idx]}' width='250' height='250'></a></td><figcaption><td>{song_artist[idx]}</td><br><td>{names}</td></figcaption></figure></tr></div>"
+        table += f"<div class='enlarge col'><figure><a href='/features/{song_id[idx]}'><img src='{song_img[idx]}' width='250' height='250'></a><figcaption><h3>{song_artist[idx]}<br>{names}</h3></figcaption></figure></div>"
   table += "</div>"
 
   return render_template('playlistdata.html', 
@@ -254,19 +285,6 @@ def tracks():
       artist=artist,
       name=name
     )
-  )
-
-@app.route('/viewplaylists')
-def view_playlists():
-  if 'code' not in session.keys():
-    return redirect(url_for('login'))
-
-  user_playlists = spotify.get_user_playlists(session['code'])
-  
-  return render_template(
-    'viewplaylists.html',
-    data=user_playlists['items'],
-    navbar=nav
   )
 
 @app.route('/recommend')

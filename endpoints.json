@@ -1,6 +1,6 @@
 {
   "Home": "/home",
   "Search": "/search",
-  "View Playlists": "/viewplaylists",
+  "View Playlists": "/playlists",
   "Logout": "/logout"
 }
