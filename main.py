@@ -103,38 +103,29 @@ def make_search():
     navbar=nav
   )
 
-@app.route('/features')
-def audio_features(feat=None, img=None, artist=None, name=None):
+@app.route('/features/<track_id>')
+def audio_features(track_id):
   if 'code' not in session.keys():
     return redirect(url_for('login'))
 
-  song_id = request.args.get("feat")
-  img = request.args.get("img")
-  artist = request.args.get("artist")
-  name = request.args.get('name')
-
-  song_features = spotify.get_analysis(song_id,session['code'])
-
-  if check_error(song_features):
+  track_info = spotify.search_trackid(track_id,session['code'])
+  song_features = spotify.get_analysis(track_id,session['code'])
+  
+  if check_error(song_features) or check_error(song_features):
     return render_template("error.html", navbar=nav)
 
   else:
-    dance = float(song_features['danceability']) * 100
-    energy = float(song_features['energy']) * 100
-    instrumentalness = float(song_features['instrumentalness']) * 100
-    valence = float(song_features['valence']) * 100
-  #print(dance,song_features['danceability'],energy,song_features['energy'],instrumentalness,song_features['instrumentalness'])
-  return render_template(
-    'songanalysis.html',
-    img=img,
-    artist=artist,
-    name=name,
-    dance=dance,
-    energy=energy,
-    instrumentalness=instrumentalness,
-    valence=valence,
-    navbar=nav
-  )
+    return render_template(
+      'songanalysis.html',
+      img              = track_info['album']['images'][0]['url'],
+      artist           = track_info['album']['artists'][0]['name'],
+      name             = track_info['name'],
+      dance            = float(song_features['danceability']) * 100,
+      energy           = float(song_features['energy']) * 100,
+      instrumentalness = float(song_features['instrumentalness']) * 100,
+      valence          = float(song_features['valence']) * 100,
+      navbar           = nav
+    )
 
 @app.route('/playlistdata')
 def playlists():

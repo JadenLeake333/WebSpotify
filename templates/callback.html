@@ -16,7 +16,7 @@
                 {%for songs in data%}
                     <div class='col enlarge child'>
                         <figure>
-                            <a href="/features?feat={{songs['id']}}&img={{songs['album']['images'][0]['url']}}&artist={{songs['artists'][0]['name']}}&name={{songs['name']}}"><img src="{{songs['album']['images'][0]['url']}}" width='250' height='250'></a>
+                            <a href="/features/{{songs['id']}}"><img src="{{songs['album']['images'][0]['url']}}" width='250' height='250'></a>
                             <figcaption>
                             {{songs['artists'][0]['name']}}
                                 <br>
