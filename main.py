@@ -104,25 +104,27 @@ def make_search():
 
 @app.route('/features/<track_id>')
 def audio_features(track_id):
+
   if 'code' not in session.keys():
     return redirect(url_for('login'))
 
   track_info = spotify.search_trackid(track_id,session['code'])
   song_features = spotify.get_analysis(track_id,session['code'])
   
-  if check_error(song_features) or check_error(song_features):
+  if check_error(song_features) or check_error(track_info):
     return render_template("error.html", navbar=nav)
 
   else:
     return render_template(
       'songanalysis.html',
+      album_id         = track_info['album']['id'],
       img              = track_info['album']['images'][0]['url'],
       artist           = track_info['album']['artists'][0]['name'],
       name             = track_info['name'],
-      dance            = float(song_features['danceability']) * 100,
-      energy           = float(song_features['energy']) * 100,
-      instrumentalness = float(song_features['instrumentalness']) * 100,
-      valence          = float(song_features['valence']) * 100,
+      dance            = round(float(song_features['danceability']) * 100),
+      energy           = round(float(song_features['energy']) * 100),
+      instrumentalness = round(float(song_features['instrumentalness']) * 100),
+      valence          = round(float(song_features['valence']) * 100),
       navbar           = nav
     )
 
@@ -131,11 +133,11 @@ def view_playlists():
   if 'code' not in session.keys():
     return redirect(url_for('login'))
 
-  user_playlists = spotify.get_user_playlists(50,session['code'])
+  user_playlists = spotify.make_call("me/playlists", session['code'],  {"limit" : 50})
   next_playlist = parse_json.extract_values(user_playlists, 'next')
 
   while next_playlist[0]:
-    next_page = spotify.get_next_playlist(next_playlist[0],session['code'])
+    next_page = spotify.get_next(next_playlist[0],session['code'])
 
     for item in next_page['items']:
       user_playlists['items'].append(item)
@@ -148,17 +150,19 @@ def view_playlists():
     navbar=nav
   )
 
-@app.route('/playlist/<playlist_id>')
-def playlists(playlist_id):
+@app.route('/content/<content_type>/<content_id>')
+def playlists(content_type,content_id):
   if 'code' not in session.keys():
     return redirect(url_for('login'))
 
-  playlist_data = spotify.get_playlist(playlist_id,session['code'])
+  content_data = spotify.make_call(f"{content_type}/{content_id}",session['code'])
 
-  if check_error(playlist_data):
+  if check_error(content_data):
     return render_template("error.html", navbar=nav)
 
-  if playlist_data['tracks']['total'] == 0:
+  tracks = spotify.track_list(content_data, content_type, session['code'])
+
+  if len(tracks['song_names']) == 0:
     return render_template('playlistdata.html', 
       name = "No songs to display! Try adding songs to the playlist!",
       playlistLength = 0,
@@ -171,82 +175,64 @@ def playlists(playlist_id):
       navbar = nav,
     )
 
-  next_playlist = parse_json.extract_values(playlist_data, 'next')
-  num_tracks = playlist_data['tracks']['total']
+  # next_playlist = parse_json.extract_values(content_data, 'next')
+  num_tracks = len(tracks['song_names'])
 
-  playlist_name = playlist_data['name']
+  playlist_name = content_data['name']
 
-  temp_id, song_names, song_img, song_artist, song_id, dance, energy, instrumentalness, valence = [], [], [], [], [], [], [], [], [] 
+  temp_id, dance, energy, instrumentalness, valence = [], [], [], [], []
+  analysis = spotify.song_analysis(tracks['song_id'], session['code'])
+  # song_analysis = spotify.make_call("audio-features",session['code'],{"ids" : ",".join(tracks['song_id'])})
 
-  for songs in playlist_data['tracks']['items']:
-    if songs.get('track').get('id'):
-      song_names.append(songs['track']['name'])
-      song_img.append(songs['track']['album']['images'][0]['url'])
-      song_artist.append(songs['track']['artists'][0]['name'])
-      song_id.append(songs['track']['id'])
-    else:
-      song_names.append(songs['track']['name'])
-      song_img.append("static/assets/unknown.png")
-      song_artist.append("Unknown")
-      song_id.append("")
+  # if len(song_analysis.get('audio_features')) > 0:
+  #   dance, instrumentalness, valence, energy = spotify.parse_song_analysis(song_analysis)
 
-  song_analysis = spotify.get_analysis(song_id,session['code'])
+  # while next_playlist[0]:  # If the playlist is larger than 100 songs this will be able to get each "page"
+  #     next_page = spotify.get_next_playlist(next_playlist[0],session['code'])
+  #     temp_id.clear()
 
-  if len(song_analysis.get('audio_features')) > 0:
-    dance, instrumentalness, valence, energy = parse_song_analysis(song_analysis)
-    # for analysis in song_analysis['audio_features']:
-    #     dance.append(analysis['danceability'])
-    #     energy.append(analysis['energy'])
-    #     instrumentalness.append(analysis['instrumentalness'])
-    #     valence.append(analysis['valence'])
+  #     for songs in next_page['items']:
+  #       if songs.get('track').get('name'):
+  #         song_names.append(songs['track']['name'])
+  #         song_img.append(songs['track']['album']['images'][0]['url'])
+  #         song_artist.append(songs['track']['artists'][0]['name'])
+  #         song_id.append(songs['track']['id'])
+  #         temp_id.append(songs['track']['id'])
+  #         duration_ms += int(songs['track']['duration_ms'])
+  #       else:
+  #         song_names.append(songs['track']['name'])
+  #         song_img.append("static/assets/unknown.png")
+  #         song_artist.append("Unknown")
+  #         song_id.append("")
+  #         temp_id.append("")
 
-  duration_ms = 0
-  while next_playlist[0]:  # If the playlist is larger than 100 songs this will be able to get each "page"
-      next_page = spotify.get_next_playlist(next_playlist[0],session['code'])
-      temp_id.clear()
-
-      for songs in next_page['items']:
-        if songs.get('track').get('name'):
-          song_names.append(songs['track']['name'])
-          song_img.append(songs['track']['album']['images'][0]['url'])
-          song_artist.append(songs['track']['artists'][0]['name'])
-          song_id.append(songs['track']['id'])
-          temp_id.append(songs['track']['id'])
-          duration_ms += int(songs['track']['duration_ms'])
-        else:
-          song_names.append(songs['track']['name'])
-          song_img.append("static/assets/unknown.png")
-          song_artist.append("Unknown")
-          song_id.append("")
-          temp_id.append("")
-
-      song_analysis = spotify.get_analysis(temp_id,session['code'])
+  #     song_analysis = spotify.get_analysis(temp_id,session['code'])
   
-      if song_analysis.get('audio_features')[0]:
-        for analysis in song_analysis['audio_features']:
-            dance.append(analysis['danceability'])
-            energy.append(analysis['energy'])
-            instrumentalness.append(analysis['instrumentalness'])
-            valence.append(analysis['valence'])
+  #     if song_analysis.get('audio_features')[0]:
+  #       for analysis in song_analysis['audio_features']:
+  #           dance.append(analysis['danceability'])
+  #           energy.append(analysis['energy'])
+  #           instrumentalness.append(analysis['instrumentalness'])
+  #           valence.append(analysis['valence'])
 
-      next_playlist = parse_json.extract_values(next_page, 'next')
+  #     next_playlist = parse_json.extract_values(next_page, 'next')
 
-  if len(dance) > 0:
-    dance_avg = round((sum(dance) / len(dance)) * 100)
-    energy_avg = round((sum(energy) / len(energy)) * 100)
-    instrumentalness_avg = round((sum(instrumentalness) / len(instrumentalness)) * 100)
-    valence_avg = round((sum(valence) / len(valence)) * 100)
+  if len(analysis['danceability']) > 0:
+    dance_avg = round((sum(analysis['danceability']) / len(analysis['danceability'])) * 100)
+    energy_avg = round((sum(analysis['energy']) / len(analysis['energy'])) * 100)
+    instrumentalness_avg = round((sum(analysis['instrumentalness']) / len(analysis['instrumentalness'])) * 100)
+    valence_avg = round((sum(analysis['valence']) / len(analysis['valence'])) * 100)
   else:
     dance_avg, energy_avg, instrumentalness_avg, valence_avg = 0,0,0,0
 
   table = "<div class='row'>"
-  for idx, names in enumerate(song_names):
+  for idx, names in enumerate(tracks['song_names']):
       # if names.find("'"):
       #   names = names.replace("'","")
-      if song_id[idx] == "":
-        table += f"<div class='enlarge col'><figure><img src='../static/assets/unknown.png' width='250' height='250'><figcaption><h3>{song_artist[idx]}<br>{names}</h3></figcaption></figure></div>"
+      if tracks['song_id'][idx] == "":
+        table += f"<div class='enlarge col'><figure><img src='../../static/assets/unknown.png' width='250' height='250'><figcaption><h3>{tracks['song_artist'][idx]}<br>{names}</h3></figcaption></figure></div>"
       else:
-        table += f"<div class='enlarge col'><figure><a href='/features/{song_id[idx]}'><img src='{song_img[idx]}' width='250' height='250'></a><figcaption><h3>{song_artist[idx]}<br>{names}</h3></figcaption></figure></div>"
+        table += f"<div class='enlarge col'><figure><a href='/features/{tracks['song_id'][idx]}'><img src='{tracks['song_img'][idx]}' width='250' height='250'></a><figcaption><h3>{tracks['song_artist'][idx]}<br>{names}</h3></figcaption></figure></div>"
   table += "</div>"
 
   return render_template('playlistdata.html', 
@@ -266,12 +252,12 @@ def tracks():
     return redirect(url_for('login'))
 
   track = request.args.get('track')
-  track_id = track[14::]
-  track_data = spotify.search_trackid(track_id,session['code'])
+  print(track)
+  track_id = track.split(":")[2]
+  track_data = spotify.make_call(f"tracks/{track_id}",session['code'])
 
-  name = track_data['name']
-  img = track_data['album']['images'][0]['url']
-  artist = track_data['artists'][0]['name']
+  if check_error(content_data):
+    return render_template("error.html", navbar=nav)
 
   # Regex this
   if name.find("'"):
@@ -280,10 +266,10 @@ def tracks():
   return redirect(
     url_for(
       'audio_features',
-      feat=track_id,
-      img=img,
-      artist=artist,
-      name=name
+      feat    = track_id,
+      name    = track_data['name'],
+      artist  = track_data['artists'][0]['name'],
+      img     = track_data['album']['images'][0]['url'],
     )
   )
 

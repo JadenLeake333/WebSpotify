@@ -1,5 +1,7 @@
 import base64
 import requests
+from helper_functions import *
+from parseJSON import parse_json
 from urllib.parse import urlencode
 
 class spotify_api():
@@ -8,8 +10,8 @@ class spotify_api():
         self.secret = secret
         self.scope = scope
         self.redirect_uri = redirect_uri
-        self.token = None
         self.headers = None
+        self.endpoint = "https://api.spotify.com/v1/"
 
     def get_url(self):
         provider_url = "https://accounts.spotify.com/authorize"
@@ -40,6 +42,88 @@ class spotify_api():
         
         response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data=data)
         return response.json()['access_token'] #Return access code
+
+    def make_call(self,target,token,queries = None):
+        self.headers = {
+            'Authorization': 'Bearer %s'%token,
+        }
+        query_string = "?"
+        if queries:
+            for q in queries.items():
+                query_string += f"{q[0]}={q[1]}"
+        response = requests.get(f'{self.endpoint}{target}{query_string if query_string != "?" else ""}', headers=self.headers)
+        return response.json()
+
+    def track_list(self,data,content_type,token):
+        song_items = {
+            "song_names" : [],
+            "song_img" : [],
+            "song_artist" : [], 
+            "song_id" : []
+        }
+
+        if content_type == "playlists":
+            next_playlist = parse_json.extract_values(data, 'next')
+            for tracks in data['tracks']['items']:
+                if tracks.get('track').get('id'):
+                    song_items["song_names"].append(tracks['track']['name'])
+                    song_items["song_img"].append(tracks['track']['album']['images'][0]['url'])
+                    song_items["song_artist"].append(tracks['track']['artists'][0]['name'])
+                    song_items["song_id"].append(tracks['track']['id'])
+                else:
+                    song_items["song_names"].append(tracks['track']['name'])
+                    song_items["song_img"].append("../static/assets/unknown.png")
+                    song_items["song_artist"].append("Unknown")
+                    song_items["song_id"].append("")
+
+           
+            while next_playlist[0]:
+                next_page = self.get_next(next_playlist[0],token)
+                for tracks in next_page['items']:
+                    if tracks.get('track').get('id'):
+                        song_items["song_names"].append(tracks['track']['name'])
+                        song_items["song_img"].append(tracks['track']['album']['images'][0]['url'])
+                        song_items["song_artist"].append(tracks['track']['artists'][0]['name'])
+                        song_items["song_id"].append(tracks['track']['id'])
+                    else:
+                        song_items["song_names"].append(tracks['track']['name'])
+                        song_items["song_img"].append("../static/assets/unknown.png")
+                        song_items["song_artist"].append("Unknown")
+                        song_items["song_id"].append("")
+                
+                next_playlist = parse_json.extract_values(next_page, 'next')
+
+        if content_type == "albums":
+            for tracks in data['tracks']['items']:
+                song_items["song_names"].append(tracks['name'])
+                song_items["song_img"].append(data['images'][0]['url'])
+                song_items["song_artist"].append(tracks['artists'][0]['name'])
+                song_items["song_id"].append(tracks['id'])
+        return song_items
+    
+    def song_analysis(self,track_ids,token):
+        song_stats = {
+            "danceability" : [],
+            "instrumentalness" : [],
+            "energy" : [],
+            "valence" : []
+        }
+        ids = split_list(track_ids,100) # From helper_functions
+        for id in ids:
+            analysis = self.make_call("audio-features", token, {"ids" : ",".join(id)})
+            dance, instrumental, valence, energy = self.parse_song_analysis(analysis)
+            song_stats['danceability'] += dance
+            song_stats['instrumentalness'] += instrumental
+            song_stats['valence'] += valence
+            song_stats['energy'] += energy
+        return song_stats
+
+    def parse_song_analysis(self, data : dict) -> dict:
+        danceability = [analysis['danceability'] for analysis in data['audio_features']]
+        instrumentalness = [analysis['instrumentalness'] for analysis in data['audio_features']]
+        valence = [analysis['valence'] for analysis in data['audio_features']]
+        energy = [analysis['energy'] for analysis in data['audio_features']]
+        return danceability, instrumentalness, valence, energy
 
     def get_user_artists(self,token):
         # Obtain user's (who confirmed website) top artists
@@ -99,11 +183,18 @@ class spotify_api():
         response = requests.get('https://api.spotify.com/v1/search?q=%s&type=artist'%artist,headers=self.headers)
         return response.json()
 
-    def get_playlist(self,playlistid,token):
+    def get_playlist(self,playlist_id,token):
         self.headers = {
         'Authorization': 'Bearer %s'%token,
             }
-        response = requests.get('https://api.spotify.com/v1/playlists/%s'%playlistid, headers=self.headers)
+        response = requests.get('https://api.spotify.com/v1/playlists/%s'%playlist_id, headers=self.headers)
+        return response.json()
+
+    def get_album(self,album_id,token):
+        self.headers = {
+            'Authorization': 'Bearer %s'%token,
+        }
+        response = requests.get('https://api.spotify.com/v1/albums/%s'%album_id, headers=self.headers)
         return response.json()
 
     def get_recommendations(self,genres,token):
@@ -130,7 +221,7 @@ class spotify_api():
         response = requests.get('https://api.spotify.com/v1/tracks/%s'%trackid,headers=self.headers)
         return response.json()
 
-    def get_next_playlist(self,next_page,token): # Requires calling the "get_playlist()" function first to retrieve "next"
+    def get_next(self,next_page,token): # Requires calling the "get_playlist()" function first to retrieve "next"
         self.headers = {
         'Authorization': 'Bearer %s'%token,
             }
