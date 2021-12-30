@@ -5,5 +5,3 @@ Learn about the music you love.
 
 This is being hosted here:
 https://WebSpotify.jadenleake.repl.co
-
-Requires a spotify account to use
