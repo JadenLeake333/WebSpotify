@@ -8,7 +8,7 @@
   <body class="d-flex h-100 justify-content-center text-center text-white bg-dark">
       <div>
           {{navbar | safe}}
-          <h1>{{name}} - {{playlistLength}} tracks</h1>
+          <h1>{{name}} - {{length}} tracks | Duration: {{duration}}</h1>
         <div class='container overflow-auto cont'>   
             {{table | safe}}
         </div>

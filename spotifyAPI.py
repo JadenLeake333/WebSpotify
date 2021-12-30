@@ -59,7 +59,8 @@ class spotify_api():
             "song_names" : [],
             "song_img" : [],
             "song_artist" : [], 
-            "song_id" : []
+            "song_id" : [],
+            "total_duration" : 0
         }
 
         if content_type == "playlists":
@@ -70,6 +71,7 @@ class spotify_api():
                     song_items["song_img"].append(tracks['track']['album']['images'][0]['url'])
                     song_items["song_artist"].append(tracks['track']['artists'][0]['name'])
                     song_items["song_id"].append(tracks['track']['id'])
+                    song_items["total_duration"] += (tracks['track']['duration_ms'])
                 else:
                     song_items["song_names"].append(tracks['track']['name'])
                     song_items["song_img"].append("../static/assets/unknown.png")
@@ -85,6 +87,7 @@ class spotify_api():
                         song_items["song_img"].append(tracks['track']['album']['images'][0]['url'])
                         song_items["song_artist"].append(tracks['track']['artists'][0]['name'])
                         song_items["song_id"].append(tracks['track']['id'])
+                        song_items["total_duration"] += (tracks['track']['duration_ms'])
                     else:
                         song_items["song_names"].append(tracks['track']['name'])
                         song_items["song_img"].append("../static/assets/unknown.png")
@@ -99,6 +102,7 @@ class spotify_api():
                 song_items["song_img"].append(data['images'][0]['url'])
                 song_items["song_artist"].append(tracks['artists'][0]['name'])
                 song_items["song_id"].append(tracks['id'])
+                song_items["total_duration"] += tracks['duration_ms']
         return song_items
     
     def song_analysis(self,track_ids,token):

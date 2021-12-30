@@ -7,8 +7,12 @@ def make_table():
     pass
 
 def ms_time_conversion(time : int) -> str:
+    import math
 # Convert time from ms into H:M:S str
-    pass
+    seconds=math.floor((time/1000)%60)
+    minutes=math.floor((time/(1000*60))%60)
+    hours=math.floor((time/(1000*60*60))%24)
+    return f"{str(hours) + 'h' if hours > 0 else ''}{str(minutes) + 'm' if minutes > 0 else ''}{str(seconds) + 's' if seconds > 0 else ''}"
 
 def split_list(lst : list, n : int) -> list:
     # Split list into n lenghted segments

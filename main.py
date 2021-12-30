@@ -42,14 +42,14 @@ def home():
   if 'code' not in session.keys():
     return redirect(url_for('login'))
 
-  song_data = spotify.get_user_tracks(session['code'])
-  username = spotify.get_user(session['code'])['display_name']
+  song_data = spotify.make_call("me/top/tracks",session['code'])
+  username = spotify.make_call("me",session['code'])['display_name']
 
   return render_template(
     'callback.html',
-    data=song_data['items'], # Using Jinja template engine
-    name=username,
-    navbar=nav
+    data           = song_data['items'], # Using Jinja template engine
+    name           = username,
+    navbar         = nav
   )
 
 @app.route('/callback')
@@ -59,6 +59,7 @@ def main():
 
   return redirect(url_for('home'))
 
+# Needs to be refactored, not in use
 @app.route('/makeplaylist')
 def make_playlist():
   if 'code' not in session.keys():
@@ -108,23 +109,23 @@ def audio_features(track_id):
   if 'code' not in session.keys():
     return redirect(url_for('login'))
 
-  track_info = spotify.search_trackid(track_id,session['code'])
-  song_features = spotify.get_analysis(track_id,session['code'])
+  track_info = spotify.make_call(f"tracks/{track_id}",session['code'])
+  song_features = spotify.song_analysis([track_id],session['code'])
   
   if check_error(song_features) or check_error(track_info):
     return render_template("error.html", navbar=nav)
 
-  else:
-    return render_template(
+  return render_template(
       'songanalysis.html',
       album_id         = track_info['album']['id'],
       img              = track_info['album']['images'][0]['url'],
       artist           = track_info['album']['artists'][0]['name'],
       name             = track_info['name'],
-      dance            = round(float(song_features['danceability']) * 100),
-      energy           = round(float(song_features['energy']) * 100),
-      instrumentalness = round(float(song_features['instrumentalness']) * 100),
-      valence          = round(float(song_features['valence']) * 100),
+      preview_url      = track_info['preview_url'],
+      dance            = round(float(song_features['danceability'][0]) * 100),
+      energy           = round(float(song_features['energy'][0]) * 100),
+      instrumentalness = round(float(song_features['instrumentalness'][0]) * 100),
+      valence          = round(float(song_features['valence'][0]) * 100),
       navbar           = nav
     )
 
@@ -146,8 +147,8 @@ def view_playlists():
 
   return render_template(
     'viewplaylists.html',
-    data=user_playlists['items'],
-    navbar=nav
+    data                = user_playlists['items'],
+    navbar              = nav
   )
 
 @app.route('/content/<content_type>/<content_id>')
@@ -163,59 +164,26 @@ def playlists(content_type,content_id):
   tracks = spotify.track_list(content_data, content_type, session['code'])
 
   if len(tracks['song_names']) == 0:
-    return render_template('playlistdata.html', 
-      name = "No songs to display! Try adding songs to the playlist!",
-      playlistLength = 0,
-      display_analysis = "none",
-      table = "",
-      dance = 0,
-      energy = 0,
-      instrumental = 0,
-      valence = 0,
-      navbar = nav,
+    return render_template(
+      'playlistdata.html', 
+      name              = "No songs to display! Try adding songs to the playlist!",
+      Length            = 0,
+      duration          = 0,
+      display_analysis  = "none",
+      table             = "",
+      dance             = 0,
+      energy            = 0,
+      instrumental      = 0,
+      valence           = 0,
+      navbar            = nav,
     )
 
-  # next_playlist = parse_json.extract_values(content_data, 'next')
   num_tracks = len(tracks['song_names'])
 
   playlist_name = content_data['name']
 
-  temp_id, dance, energy, instrumentalness, valence = [], [], [], [], []
   analysis = spotify.song_analysis(tracks['song_id'], session['code'])
-  # song_analysis = spotify.make_call("audio-features",session['code'],{"ids" : ",".join(tracks['song_id'])})
-
-  # if len(song_analysis.get('audio_features')) > 0:
-  #   dance, instrumentalness, valence, energy = spotify.parse_song_analysis(song_analysis)
-
-  # while next_playlist[0]:  # If the playlist is larger than 100 songs this will be able to get each "page"
-  #     next_page = spotify.get_next_playlist(next_playlist[0],session['code'])
-  #     temp_id.clear()
-
-  #     for songs in next_page['items']:
-  #       if songs.get('track').get('name'):
-  #         song_names.append(songs['track']['name'])
-  #         song_img.append(songs['track']['album']['images'][0]['url'])
-  #         song_artist.append(songs['track']['artists'][0]['name'])
-  #         song_id.append(songs['track']['id'])
-  #         temp_id.append(songs['track']['id'])
-  #         duration_ms += int(songs['track']['duration_ms'])
-  #       else:
-  #         song_names.append(songs['track']['name'])
-  #         song_img.append("static/assets/unknown.png")
-  #         song_artist.append("Unknown")
-  #         song_id.append("")
-  #         temp_id.append("")
-
-  #     song_analysis = spotify.get_analysis(temp_id,session['code'])
-  
-  #     if song_analysis.get('audio_features')[0]:
-  #       for analysis in song_analysis['audio_features']:
-  #           dance.append(analysis['danceability'])
-  #           energy.append(analysis['energy'])
-  #           instrumentalness.append(analysis['instrumentalness'])
-  #           valence.append(analysis['valence'])
-
-  #     next_playlist = parse_json.extract_values(next_page, 'next')
+  duration = ms_time_conversion(tracks['total_duration'])
 
   if len(analysis['danceability']) > 0:
     dance_avg = round((sum(analysis['danceability']) / len(analysis['danceability'])) * 100)
@@ -235,15 +203,17 @@ def playlists(content_type,content_id):
         table += f"<div class='enlarge col'><figure><a href='/features/{tracks['song_id'][idx]}'><img src='{tracks['song_img'][idx]}' width='250' height='250'></a><figcaption><h3>{tracks['song_artist'][idx]}<br>{names}</h3></figcaption></figure></div>"
   table += "</div>"
 
-  return render_template('playlistdata.html', 
-    name = playlist_name,
-    playlistLength = num_tracks,
-    table = table,
-    dance = dance_avg,
-    energy = energy_avg,
-    instrumental = instrumentalness_avg,
-    valence = valence_avg,
-    navbar = nav,
+  return render_template(
+    'playlistdata.html', 
+    name           = playlist_name,
+    duration       = duration,
+    length         = num_tracks,
+    table          = table,
+    dance          = dance_avg,
+    energy         = energy_avg,
+    instrumental   = instrumentalness_avg,
+    valence        = valence_avg,
+    navbar         = nav,
   )
 
 @app.route('/searchtrack')
@@ -280,7 +250,7 @@ def recommend_songs():
 
   return render_template(
     'recommend.html',
-    navbar=nav
+    navbar          = nav
   )
 
 # @app.route('/converttospotify', methods=['GET','POST'])
