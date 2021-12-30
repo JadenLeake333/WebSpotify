@@ -12,7 +12,7 @@
     <div class='container cont overflow-scroll h-75'>
         <h1>Your playlists:</h1>
         <div class='row'>
-            {%for playlists in data%}
+            {%for playlists in data['items']%}
             <div class='col text-center enlarge m-1'> 
                 {%if playlists['images'] | length == 0 %}
                     {% set image = '../static/assets/unknown.png' %} 

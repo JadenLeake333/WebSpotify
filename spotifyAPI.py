@@ -31,17 +31,34 @@ class spotify_api():
         head = base64.b64encode(encode) # Client and secret codes need to be base64 encoded and passed to API
 
         headers = {
-        'Authorization': 'Basic %s'%head.decode('ascii'),
+            'Authorization': 'Basic %s'%head.decode('ascii'),
         }   
 
         data = {
-        'grant_type': 'authorization_code',
-        'code': '%s'%code,
-        'redirect_uri': '%s'%self.redirect_uri
+            'grant_type': 'authorization_code',
+            'code': '%s'%code,
+            'redirect_uri': '%s'%self.redirect_uri
         }
         
         response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data=data)
         return response.json()['access_token'] #Return access code
+
+    def client_credentials(self):
+        codes = self.client+":"+self.secret
+        encode = codes.encode('ascii')
+        head = base64.b64encode(encode) # Client and secret codes need to be base64 encoded and passed to API
+
+        headers = {
+            'Authorization': 'Basic %s'%head.decode('ascii'),
+        } 
+
+        data = {
+            'grant_type': 'client_credentials'
+        }
+
+        response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data=data)
+        print(response.json())
+        return response.json()['access_token']
 
     def make_call(self,target,token,queries = None):
         self.headers = {

@@ -1,4 +1,5 @@
 import os
+import demo as guest
 import navbar
 
 from dotenv import load_dotenv
@@ -42,20 +43,31 @@ def home():
   if 'code' not in session.keys():
     return redirect(url_for('login'))
 
-  song_data = spotify.make_call("me/top/tracks",session['code'])
-  username = spotify.make_call("me",session['code'])['display_name']
-
+  if session['type'] == "demo":
+    song_data = guest.top
+    username = "Guest"
+  else:
+    song_data = spotify.make_call("me/top/tracks",session['code'])
+    username = spotify.make_call("me",session['code'])['display_name']
   return render_template(
     'callback.html',
-    data           = song_data['items'], # Using Jinja template engine
+    data           = song_data, # Using Jinja template engine
     name           = username,
     navbar         = nav
   )
+
+@app.route('/demo')
+def demo():
+  demo_user = spotify.client_credentials()
+  session['code'] = demo_user
+  session['type'] = 'demo'
+  return redirect(url_for('home'))
 
 @app.route('/callback')
 def main():
   exchange_code = request.args.get('code')  # Parse the code from callback url
   session['code'] = spotify.get_access_token(exchange_code)
+  session['type'] = "user"
 
   return redirect(url_for('home'))
 
@@ -134,9 +146,17 @@ def view_playlists():
   if 'code' not in session.keys():
     return redirect(url_for('login'))
 
+  if session['type'] == "demo":
+    user_playlists = guest.playlists
+
+    return render_template(
+    'viewplaylists.html',
+    data                = user_playlists,
+    navbar              = nav
+  )
+
   user_playlists = spotify.make_call("me/playlists", session['code'],  {"limit" : 50})
   next_playlist = parse_json.extract_values(user_playlists, 'next')
-
   while next_playlist[0]:
     next_page = spotify.get_next(next_playlist[0],session['code'])
 
@@ -147,7 +167,7 @@ def view_playlists():
 
   return render_template(
     'viewplaylists.html',
-    data                = user_playlists['items'],
+    data                = user_playlists,
     navbar              = nav
   )
 
@@ -222,7 +242,6 @@ def tracks():
     return redirect(url_for('login'))
 
   track = request.args.get('track')
-  print(track)
   track_id = track.split(":")[2]
   track_data = spotify.make_call(f"tracks/{track_id}",session['code'])
 
