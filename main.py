@@ -5,7 +5,7 @@ import navbar
 from dotenv import load_dotenv
 from parseJSON import parse_json
 from spotifyAPI import spotify_api
-from helper_functions import *
+from helper_functions import * # check_error, pitch_class_conversion, ms_time_conversion
 # from youtube_api import YoutubeDataApi
 from flask import Flask, request, redirect, url_for, render_template, session
 
@@ -109,6 +109,9 @@ def make_search():
 
   get_tracks = spotify.search_track(search,session['code'])
 
+  if check_error(get_tracks):
+    return render_template("error.html", navbar=nav)
+
   return render_template(
     'search.html',
     data=get_tracks['tracks']['items'],
@@ -127,6 +130,7 @@ def audio_features(track_id):
   if check_error(song_features) or check_error(track_info):
     return render_template("error.html", navbar=nav)
 
+  translate_key = pitch_class_conversion(song_features['key'][0])
   return render_template(
       'songanalysis.html',
       album_id         = track_info['album']['id'],
@@ -138,6 +142,9 @@ def audio_features(track_id):
       energy           = round(float(song_features['energy'][0]) * 100),
       instrumentalness = round(float(song_features['instrumentalness'][0]) * 100),
       valence          = round(float(song_features['valence'][0]) * 100),
+      tempo            = round(song_features['tempo'][0]),
+      time_signature   = song_features['time_signature'][0],
+      key              = translate_key,
       navbar           = nav
     )
 
