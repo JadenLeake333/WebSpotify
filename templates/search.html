@@ -8,7 +8,10 @@
     </head>
     <body class="text-center text-white bg-dark">
     <div class="d-flex flex-column">
-        {{navbar | safe}}
+        <div class="navigation">
+            {{navbar | safe}}
+        </div>
+        {{searchbar | safe}}
         <div class="w-100">
             <label>Click on the artist image to get an audio analysis!</label>        
             <table class="table table-striped table-dark"><tr><th></th><th>Artist</th><th>Song Name</th><th>Preview</th></tr>

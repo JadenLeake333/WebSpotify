@@ -9,8 +9,10 @@
     <link href="../../static/css/style.css" rel="stylesheet">
     <title>Sorry!</title>
 </head>
-<body class="text-white bg-dark">
-    {{navbar | safe}}
-    <h2 style="text-align: center;">Sorry, there was a problem loading that page!</h2>
+<body class="d-flex flex-column text-white bg-dark">
+    <div class="navigation">
+        {{navbar | safe}}
+    </div>
+    <h2 class="text-center" style="margin: 15%;">Sorry, there was a problem loading that page!</h2>
 </body>
 </html>

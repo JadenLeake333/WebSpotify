@@ -1,39 +1,65 @@
 <html>
-  <head>
-      <title>Spotify Data</title>
-      <link href="../../static/css/bootstrap.min.css" rel="stylesheet">
-      <link href="../../static/css/cover.css" rel="stylesheet">
-      <link href="../../static/css/style.css" rel="stylesheet">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
-  <body class="d-flex h-100 justify-content-center text-center text-white bg-dark">
-      <div>
-          {{navbar | safe}}
-          <h1>{{name}} - {{length}} tracks | Duration: {{duration}}</h1>
+<head>
+    <title>Spotify Data</title>
+    <link href="../../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../static/css/cover.css" rel="stylesheet">
+    <link href="../../static/css/style.css" rel="stylesheet">
+    <link href="../../static/css/css-circular-prog-bar.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body class="d-flex h-100 justify-content-center text-center text-white bg-dark">
+    <div>
+        <div class="navigation">
+            {{navbar | safe}}
+        </div>
+        {{searchbar | safe}}
+        <h1>{{name}} - {{length}} tracks | Duration: {{duration}}</h1>
         <div class='container overflow-auto cont'>   
             {{table | safe}}
         </div>
-          <div style="display:{{display_analysis}}">
-              <h1>Danceability</h1>
-              <div class="progress">
-                  <div class="progress-bar" role="progressbar" style="width: {{ dance }}%" aria-valuemin="0" aria-valuemax="1">{{ dance }}%</div>
-              </div>
-              <br>
-              <h1>Energy</h1>
-              <div class="progress">
-                  <div class="progress-bar" role="progressbar" style="width:{{ energy }}%" aria-valuemin="0" aria-valuemax="100">{{ energy }}%</div>
-              </div>
-              <br>
-              <h1>Instrumentalness</h1>
-              <div class="progress">
-                  <div class="progress-bar" role="progressbar" style="width: {{instrumental}}% " aria-valuemin="0" aria-valuemax="100">{{instrumental}}%</div>
-              </div>
-              <h1>Valence</h1>
-              <div class="progress">
-                  <div class="progress-bar" role="progressbar" style="width: {{ valence }}%" aria-valuemin="0" aria-valuemax="100">{{valence}}%</div>
-              </div>
-          </div>
-      </div>
-          <script type='text/javascript' src='../../static/js/search.js'></script>
-  </body>
+        <div class= "d-flex flex-row justify-content-center flex-wrap mt-2">
+            <div>
+                <div class="progress-circle p{{dance}} {% if dance > 50 %}over50{% endif %}">
+                    <span>{{dance}}%</span>
+                    <span style="margin-top: 3em; color:white">Danceability</span>
+                    <div class="left-half-clipper">
+                    <div class="first50-bar"></div>
+                    <div class="value-bar"></div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="progress-circle p{{valence}} {% if valence > 50 %}over50{% endif %}">
+                    <span>{{valence}}%</span>
+                    <span style="margin-top: 3em; color:white">Valence</span>
+                    <div class="left-half-clipper">
+                    <div class="first50-bar"></div>
+                    <div class="value-bar"></div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="progress-circle p{{instrumental}} {% if instrumental > 50 %}over50{% endif %}">
+                    <span>{{instrumental}}%</span>
+                    <span style="margin-top: 3em; color:white">Instrumental</span>
+                    <div class="left-half-clipper">
+                    <div class="first50-bar"></div>
+                    <div class="value-bar"></div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="progress-circle p{{energy}} {% if energy > 50 %}over50{% endif %}">
+                    <span>{{energy}}%</span>
+                    <span style="margin-top: 3em; color:white">Energy</span>
+                    <div class="left-half-clipper">
+                    <div class="first50-bar"></div>
+                    <div class="value-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type='text/javascript' src='../../static/js/search.js'></script>
+</body>
 </html>

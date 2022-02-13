@@ -27,7 +27,7 @@ spotify = spotify_api(
   )
     
 authorize = spotify.get_url()
-nav = navbar.create_navbar()
+nav, search = navbar.create_navbar()
 
 @app.route('/')
 def login():
@@ -53,7 +53,8 @@ def home():
     'callback.html',
     data           = song_data, # Using Jinja template engine
     name           = username,
-    navbar         = nav
+    navbar         = nav,
+    searchbar      = search
   )
 
 @app.route('/demo')
@@ -102,20 +103,21 @@ def make_search():
   if 'code' not in session.keys():
     return redirect(url_for('login'))
 
-  search = request.args.get("s")
+  query = request.args.get("s")
 
-  if search == '':
-      search = "none"
+  if query == '':
+      query = "none"
 
-  get_tracks = spotify.search_track(search,session['code'])
+  get_tracks = spotify.search_track(query,session['code'])
 
   if check_error(get_tracks):
-    return render_template("error.html", navbar=nav)
+    return render_template("error.html", navbar=nav, searchbar=search)
 
   return render_template(
     'search.html',
-    data=get_tracks['tracks']['items'],
-    navbar=nav
+    data        = get_tracks['tracks']['items'],
+    navbar      = nav,
+    searchbar   = search
   )
 
 @app.route('/features/<track_id>')
@@ -128,7 +130,7 @@ def audio_features(track_id):
   song_features = spotify.song_analysis([track_id],session['code'])
   
   if check_error(song_features) or check_error(track_info):
-    return render_template("error.html", navbar=nav)
+    return render_template("error.html", navbar=nav, searchbar=search)
 
   translate_key = pitch_class_conversion(song_features['key'][0])
   return render_template(
@@ -145,7 +147,8 @@ def audio_features(track_id):
       tempo            = round(song_features['tempo'][0]),
       time_signature   = song_features['time_signature'][0],
       key              = translate_key,
-      navbar           = nav
+      navbar           = nav,
+      searchbar        = search
     )
 
 @app.route('/playlists')
@@ -159,7 +162,8 @@ def view_playlists():
     return render_template(
     'viewplaylists.html',
     data                = user_playlists,
-    navbar              = nav
+    navbar              = nav,
+    searchbar           = search
   )
 
   user_playlists = spotify.make_call("me/playlists", session['code'],  {"limit" : 50})
@@ -175,7 +179,8 @@ def view_playlists():
   return render_template(
     'viewplaylists.html',
     data                = user_playlists,
-    navbar              = nav
+    navbar              = nav,
+    searchbar           = search
   )
 
 @app.route('/content/<content_type>/<content_id>')
@@ -186,7 +191,7 @@ def playlists(content_type,content_id):
   content_data = spotify.make_call(f"{content_type}/{content_id}",session['code'])
 
   if check_error(content_data):
-    return render_template("error.html", navbar=nav)
+    return render_template("error.html", navbar=nav,searchbar=search)
 
   tracks = spotify.track_list(content_data, content_type, session['code'])
 
@@ -203,6 +208,7 @@ def playlists(content_type,content_id):
       instrumental      = 0,
       valence           = 0,
       navbar            = nav,
+      searchbar         = search
     )
 
   num_tracks = len(tracks['song_names'])
@@ -220,6 +226,7 @@ def playlists(content_type,content_id):
   else:
     dance_avg, energy_avg, instrumentalness_avg, valence_avg = 0,0,0,0
 
+  # Create the card for displaying Song Images and
   table = "<div class='row'>"
   for idx, names in enumerate(tracks['song_names']):
       # if names.find("'"):
@@ -241,6 +248,7 @@ def playlists(content_type,content_id):
     instrumental   = instrumentalness_avg,
     valence        = valence_avg,
     navbar         = nav,
+    searchbar      = search
   )
 
 @app.route('/searchtrack')
@@ -253,7 +261,7 @@ def tracks():
   track_data = spotify.make_call(f"tracks/{track_id}",session['code'])
 
   if check_error(content_data):
-    return render_template("error.html", navbar=nav)
+    return render_template("error.html", navbar=nav, searchbar=search)
 
   # Regex this
   if name.find("'"):
@@ -276,7 +284,8 @@ def recommend_songs():
 
   return render_template(
     'recommend.html',
-    navbar          = nav
+    navbar          = nav,
+    searchbar       = search
   )
 
 # @app.route('/converttospotify', methods=['GET','POST'])
@@ -322,11 +331,13 @@ def recommend_songs():
 
 #     return render_template(
 #       'youtubespotify.html',
-#       navbar=nav)
+#       navbar=nav,
+# searchbar=search)
 #   else:
 #     return render_template(
 #       'youtubespotify.html',
-#       navbar=nav)
+#       navbar=nav,
+# searchbar=search)
 
 @app.route('/recommendedsongs')
 def display_recommended(dance=None, energy=None, instrumental=None, valence=None):
@@ -377,7 +388,8 @@ def display_recommended(dance=None, energy=None, instrumental=None, valence=None
     energy=energy,
     instrumental=instrumental,
     valence=valence,
-    navbar=nav
+    navbar=nav,
+    searchbar=search
   )
 
   return render_template('recommendedplaylist.html', data=recommended['tracks'])

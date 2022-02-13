@@ -6,28 +6,29 @@
         <link href="static/css/style.css" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
-    <body class=" box-shadow text-white bg-dark">
-    <div class="navigation">
-        {{navbar | safe}}
-    </div>
-    <div class='container cont overflow-scroll h-75'>
-        <h1>Your playlists:</h1>
-        <div class='row'>
-            {%for playlists in data['items']%}
-            <div class='col text-center enlarge m-1'> 
-                {%if playlists['images'] | length == 0 %}
-                    {% set image = '../static/assets/unknown.png' %} 
-                {%else%}
-                    {% set image = playlists['images'][0]['url'] %}
-                {% endif %}
-                <figure>
-                    <a href="/content/playlists/{{playlists['id']}}"><img src="{{image}}" height='300px' width='300px'></a>
-                    <figcaption><h3>{{playlists['name']}}</h3></figcaption>
-                </figure>
-            </div>
-            {% endfor %}
+    <body class="d-flex flex-column text-center box-shadow text-white bg-dark">
+        <div class="navigation">
+            {{navbar | safe}}
         </div>
-    </div>
-    <script type='text/javascript' src='static/js/search.js'></script>
+        {{searchbar | safe}}
+        <div class='container cont overflow-scroll h-75'>
+            <h1>Your playlists:</h1>
+            <div class='row'>
+                {%for playlists in data['items']%}
+                <div class='col text-center enlarge m-1'> 
+                    {%if playlists['images'] | length == 0 %}
+                        {% set image = '../static/assets/unknown.png' %} 
+                    {%else%}
+                        {% set image = playlists['images'][0]['url'] %}
+                    {% endif %}
+                    <figure>
+                        <a href="/content/playlists/{{playlists['id']}}"><img src="{{image}}" height='300px' width='300px'></a>
+                        <figcaption><h3>{{playlists['name']}}</h3></figcaption>
+                    </figure>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <script type='text/javascript' src='static/js/search.js'></script>
     </body>
 </html>

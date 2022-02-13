@@ -57,7 +57,6 @@ class spotify_api():
         }
 
         response = requests.post('https://accounts.spotify.com/api/token', headers=headers, data=data)
-        print(response.json())
         return response.json()['access_token']
 
     def make_call(self,target,token,queries = None):
