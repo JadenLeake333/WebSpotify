@@ -83,9 +83,20 @@
                         </div>
                     </div>
                 </div>
-    
             </div>
         </div>
+        {% if recommended["tracks"] | length > 0 %}
+            <hr>
+            <h1>Recommended Songs</h1>
+            <div class="d-flex justify-content-between">
+                {% for songs in recommended["tracks"] %}
+                    <div>
+                        <a href="/features/{{songs['id']}}"><img src="{{songs['album']['images'][0]['url']}}" width="150" height='150'/></a>
+                        <h3>{{songs['name']}}</h3>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
         <script type='text/javascript' src='../static/js/search.js'></script>
     </body>
 </html>

@@ -19,6 +19,11 @@ def split_list(lst : list, n : int) -> list:
     n = max(1, n)
     return [lst[i:i+n] for i in range(0, len(lst), n)]
 
+def pluraizer(word : str, pluralize : bool) -> str:
+    if pluralize:
+        return word + 's'
+    return word
+
 # https://en.wikipedia.org/wiki/Pitch_class
 # Will return Key of a song based on integer (0 = C, 1 = C♯, D♭ )
 def pitch_class_conversion(pitch : int) -> str:

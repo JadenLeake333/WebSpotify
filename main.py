@@ -1,6 +1,6 @@
 import os
-import demo as guest
 import navbar
+import demo as guest
 
 from dotenv import load_dotenv
 from parseJSON import parse_json
@@ -15,8 +15,9 @@ load_dotenv() #Get env variables
 client_id = os.getenv("CLIENT")
 client_secret = os.getenv("SECRET")
 app.secret_key = os.getenv("SESSIONSECRET")
+callback_url = os.getenv("CALLBACK")
 # youtubeAPI = YoutubeDataApi(os.getenv("UTUBEAPIKEY"))
-redirect_uri = 'http://localhost:5000/callback' #https://WebSpotify.jadenleake.repl.co/callback
+redirect_uri = callback_url
 permissions = 'user-top-read,playlist-modify-public,playlist-read-private,playlist-modify-private,playlist-read-collaborative'
 
 spotify = spotify_api(
@@ -38,6 +39,7 @@ def logout():
   session.pop('username', None)
   return redirect(url_for('login'))
 
+# Home page to display users top listened to songs according to spotify
 @app.route('/home')
 def home():
   if 'code' not in session.keys():
@@ -57,6 +59,7 @@ def home():
     searchbar      = search
   )
 
+# Allow user to demo application using hard-coded data
 @app.route('/demo')
 def demo():
   demo_user = spotify.client_credentials()
@@ -64,6 +67,7 @@ def demo():
   session['type'] = 'demo'
   return redirect(url_for('home'))
 
+# Initalize access token
 @app.route('/callback')
 def main():
   exchange_code = request.args.get('code')  # Parse the code from callback url
@@ -72,32 +76,32 @@ def main():
 
   return redirect(url_for('home'))
 
-# Needs to be refactored, not in use
-@app.route('/makeplaylist')
-def make_playlist():
-  if 'code' not in session.keys():
-    return redirect(url_for('login'))
+# @app.route('/makeplaylist')
+# def make_playlist():
+#   if 'code' not in session.keys():
+#     return redirect(url_for('login'))
 
-  user = spotify.get_user(session['code'])
-  user_id = user['id']
+#   user = spotify.get_user(session['code'])
+#   user_id = user['id']
 
-  top_playlist = spotify.make_playlist(
-      user_id, 
-      "Top Songs", 
-      "Here are your most listened to songs!", 
-      session['code']
-    )
+#   top_playlist = spotify.make_playlist(
+#       user_id, 
+#       "Top Songs", 
+#       "Here are your most listened to songs!", 
+#       session['code']
+#     )
 
-  songs = request.args.get('s')
+#   songs = request.args.get('s')
 
-  spotify.fill_playlist(
-    top_playlist['id'], 
-    songs, 
-    session['code']
-  )
+#   spotify.fill_playlist(
+#     top_playlist['id'], 
+#     songs, 
+#     session['code']
+#   )
 
-  return "Your playlist has been made! <a href='/playlistdata?playlist=%s'>Click here to view it!</a>" % top_playlist['uri']
+#   return "Your playlist has been made! <a href='/playlistdata?playlist=%s'>Click here to view it!</a>" % top_playlist['uri']
 
+# Query API to return search results from given input
 @app.route('/search')
 def make_search():
   if 'code' not in session.keys():
@@ -108,8 +112,7 @@ def make_search():
   if query == '':
       query = "none"
 
-  get_tracks = spotify.search_track(query,session['code'])
-
+  get_tracks = spotify.make_call(f'search',session['code'], {"q" : query, "type" : "track", "limit" : 50})
   if check_error(get_tracks):
     return render_template("error.html", navbar=nav, searchbar=search)
 
@@ -120,6 +123,7 @@ def make_search():
     searchbar   = search
   )
 
+# Given a track id, display analytics about the song including values like "danceability" and "valence"
 @app.route('/features/<track_id>')
 def audio_features(track_id):
 
@@ -132,6 +136,7 @@ def audio_features(track_id):
   if check_error(song_features) or check_error(track_info):
     return render_template("error.html", navbar=nav, searchbar=search)
 
+  recommended = spotify.make_call("recommendations", session['code'], {"seed_tracks":track_info['id'],"limit": 5})
   translate_key = pitch_class_conversion(song_features['key'][0])
   return render_template(
       'songanalysis.html',
@@ -147,10 +152,12 @@ def audio_features(track_id):
       tempo            = round(song_features['tempo'][0]),
       time_signature   = song_features['time_signature'][0],
       key              = translate_key,
+      recommended      = recommended,
       navbar           = nav,
       searchbar        = search
     )
 
+# Display users playlists 
 @app.route('/playlists')
 def view_playlists():
   if 'code' not in session.keys():
@@ -183,6 +190,7 @@ def view_playlists():
     searchbar           = search
   )
 
+# Display songs from playlists or albums
 @app.route('/content/<content_type>/<content_id>')
 def playlists(content_type,content_id):
   if 'code' not in session.keys():
@@ -218,6 +226,7 @@ def playlists(content_type,content_id):
   analysis = spotify.song_analysis(tracks['song_id'], session['code'])
   duration = ms_time_conversion(tracks['total_duration'])
 
+  # Songs that do no originate from Spotify do not have analytics. Must be checked for.
   if len(analysis['danceability']) > 0:
     dance_avg = round((sum(analysis['danceability']) / len(analysis['danceability'])) * 100)
     energy_avg = round((sum(analysis['energy']) / len(analysis['energy'])) * 100)
@@ -226,11 +235,9 @@ def playlists(content_type,content_id):
   else:
     dance_avg, energy_avg, instrumentalness_avg, valence_avg = 0,0,0,0
 
-  # Create the card for displaying Song Images and
+  # Create the card for displaying Song Images and Titles
   table = "<div class='row'>"
   for idx, names in enumerate(tracks['song_names']):
-      # if names.find("'"):
-      #   names = names.replace("'","")
       if tracks['song_id'][idx] == "":
         table += f"<div class='enlarge col'><figure><img src='../../static/assets/unknown.png' width='250' height='250'><figcaption><h3>{tracks['song_artist'][idx]}<br>{names}</h3></figcaption></figure></div>"
       else:
@@ -251,6 +258,7 @@ def playlists(content_type,content_id):
     searchbar      = search
   )
 
+# Allows users to search track by its spotify uri
 @app.route('/searchtrack')
 def tracks():
   if 'code' not in session.keys():
@@ -263,10 +271,6 @@ def tracks():
   if check_error(content_data):
     return render_template("error.html", navbar=nav, searchbar=search)
 
-  # Regex this
-  if name.find("'"):
-    name = name.replace("'","")
-
   return redirect(
     url_for(
       'audio_features',
@@ -277,16 +281,16 @@ def tracks():
     )
   )
 
-@app.route('/recommend')
-def recommend_songs():
-  if 'code' not in session.keys():
-    return redirect(url_for('login'))
+# @app.route('/recommend')
+# def recommend_songs():
+#   if 'code' not in session.keys():
+#     return redirect(url_for('login'))
 
-  return render_template(
-    'recommend.html',
-    navbar          = nav,
-    searchbar       = search
-  )
+#   return render_template(
+#     'recommend.html',
+#     navbar          = nav,
+#     searchbar       = search
+#   )
 
 # @app.route('/converttospotify', methods=['GET','POST'])
 # def convert_playlist():
@@ -339,84 +343,84 @@ def recommend_songs():
 #       navbar=nav,
 # searchbar=search)
 
-@app.route('/recommendedsongs')
-def display_recommended(dance=None, energy=None, instrumental=None, valence=None):
-  if 'code' not in session.keys():
-    return redirect(url_for('login'))
+# @app.route('/recommendedsongs')
+# def display_recommended(dance=None, energy=None, instrumental=None, valence=None):
+#   if 'code' not in session.keys():
+#     return redirect(url_for('login'))
 
-  dance = int(request.args.get("dance")) / 100
-  energy = int(request.args.get("energy")) / 100
-  instrumental = int(request.args.get("instrumental")) / 100
-  valence = int(request.args.get('valence')) / 100
+#   dance = int(request.args.get("dance")) / 100
+#   energy = int(request.args.get("energy")) / 100
+#   instrumental = int(request.args.get("instrumental")) / 100
+#   valence = int(request.args.get('valence')) / 100
 
-  song_data = spotify.get_user_tracks(session['code'])
-  song_artist_data = spotify.get_user_artists(session['code'])
-  song_artist, song_id, song_genre = [], [], []
+#   song_data = spotify.get_user_tracks(session['code'])
+#   song_artist_data = spotify.get_user_artists(session['code'])
+#   song_artist, song_id, song_genre = [], [], []
 
-  song_artist = [song['artists'][0]['id'] for song in song_data['items']]
-  song_id = [song['id'] for song in song_data['items']]
-  # for songs in song_data['items']:
-  #     song_artist.append(songs['artists'][0]['id'])
-  #     song_id.append(songs['id'])
+#   song_artist = [song['artists'][0]['id'] for song in song_data['items']]
+#   song_id = [song['id'] for song in song_data['items']]
+#   # for songs in song_data['items']:
+#   #     song_artist.append(songs['artists'][0]['id'])
+#   #     song_id.append(songs['id'])
 
-  for songs in song_artist_data['items']: 
-      song_genre.append(songs['genres'][0])
-      '''  
-      try: # This needs a fix once fully working
-      song_artist = song_artist[0:4]
-      song_id = song_id[0:4]
-      song_genre = song_genre[0:4]
-  except:'''
+#   for songs in song_artist_data['items']: 
+#       song_genre.append(songs['genres'][0])
+#       '''  
+#       try: # This needs a fix once fully working
+#       song_artist = song_artist[0:4]
+#       song_id = song_id[0:4]
+#       song_genre = song_genre[0:4]
+#   except:'''
 
-  song_artist = song_artist[0]
-  song_id = song_id[0]
-  song_genre = song_genre[0]
+#   song_artist = song_artist[0]
+#   song_id = song_id[0]
+#   song_genre = song_genre[0]
 
-  '''
-  artists=",".join(song_artist)
-  tracks=','.join(song_id)
-  genres=','.join(song_genre)
-  '''
-  genres = song_genre.replace(" ","%20")
+#   '''
+#   artists=",".join(song_artist)
+#   tracks=','.join(song_id)
+#   genres=','.join(song_genre)
+#   '''
+#   genres = song_genre.replace(" ","%20")
 
-  recommended = spotify.get_user_recommendations(
-    song_artist,
-    song_id,
-    genres,
-    session['code'],
-    dance=dance,
-    energy=energy,
-    instrumental=instrumental,
-    valence=valence,
-    navbar=nav,
-    searchbar=search
-  )
+#   recommended = spotify.get_user_recommendations(
+#     song_artist,
+#     song_id,
+#     genres,
+#     session['code'],
+#     dance=dance,
+#     energy=energy,
+#     instrumental=instrumental,
+#     valence=valence,
+#     navbar=nav,
+#     searchbar=search
+#   )
 
-  return render_template('recommendedplaylist.html', data=recommended['tracks'])
+#   return render_template('recommendedplaylist.html', data=recommended['tracks'])
 
-@app.route('/recommendplaylist')
-def make_recommended_playlist():
-  if 'code' not in session.keys():
-    return redirect(url_for('login'))
+# @app.route('/recommendplaylist')
+# def make_recommended_playlist():
+#   if 'code' not in session.keys():
+#     return redirect(url_for('login'))
 
-  tracks = request.args.get('tracks')
+#   tracks = request.args.get('tracks')
 
-  user = spotify.get_user(session['code'])
-  user_id = user['id']
+#   user = spotify.get_user(session['code'])
+#   user_id = user['id']
 
-  recommended_playlist = spotify.make_playlist(
-    user_id, 
-    "Recommended Songs", 
-    "Here are your recommended songs!",
-    session['code']
-  )
+#   recommended_playlist = spotify.make_playlist(
+#     user_id, 
+#     "Recommended Songs", 
+#     "Here are your recommended songs!",
+#     session['code']
+#   )
 
-  spotify.fill_playlist(
-    recommended_playlist['id'], 
-    tracks,session['code']
-  )
+#   spotify.fill_playlist(
+#     recommended_playlist['id'], 
+#     tracks,session['code']
+#   )
 
-  return "Playlist has been made, check your spotify! You can close this tab."
+#   return "Playlist has been made, check your spotify! You can close this tab."
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0') #host='0.0.0.0'

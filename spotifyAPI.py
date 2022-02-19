@@ -66,8 +66,8 @@ class spotify_api():
         query_string = "?"
         if queries:
             for q in queries.items():
-                query_string += f"{q[0]}={q[1]}"
-        response = requests.get(f'{self.endpoint}{target}{query_string if query_string != "?" else ""}', headers=self.headers)
+                query_string += f"{q[0]}={q[1]}&"
+        response = requests.get(f'{self.endpoint}{target}{query_string.rstrip("&") if query_string != "?" else ""}', headers=self.headers)
         return response.json()
 
     def track_list(self,data,content_type,token):

@@ -12,7 +12,7 @@
         </div>
         {{searchbar | safe}}
         <div class='container cont overflow-scroll h-75'>
-            <h1>Your playlists:</h1>
+            <h1>Your playlist{% if data['items'] | length > 1 %}s{% endif %}:</h1>
             <div class='row'>
                 {%for playlists in data['items']%}
                 <div class='col text-center enlarge m-1'> 

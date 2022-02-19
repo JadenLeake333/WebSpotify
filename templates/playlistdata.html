@@ -13,7 +13,7 @@
             {{navbar | safe}}
         </div>
         {{searchbar | safe}}
-        <h1>{{name}} - {{length}} tracks | Duration: {{duration}}</h1>
+        <h1>{{name}} - {{length}} track{% if length > 1 %}s{% endif %} | Duration: {{duration}}</h1>
         <div class='container overflow-auto cont'>   
             {{table | safe}}
         </div>
