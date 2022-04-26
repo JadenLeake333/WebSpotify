@@ -94,7 +94,6 @@ class spotify_api():
                     song_items["song_artist"].append("Unknown")
                     song_items["song_id"].append("")
 
-           
             while next_playlist[0]:
                 next_page = self.get_next(next_playlist[0],token)
                 for tracks in next_page['items']:
@@ -133,26 +132,25 @@ class spotify_api():
         }
         ids = split_list(track_ids,100) # From helper_functions
         for id in ids:
-            analysis = self.make_call("audio-features", token, {"ids" : ",".join(id)})
-            dance, instrumental, valence, energy, key, time_signature, bpm = self.parse_song_analysis(analysis)
-            song_stats['danceability'] += dance
-            song_stats['instrumentalness'] += instrumental
+            data = self.make_call("audio-features", token, {"ids" : ",".join(id)})
+
+            danceability = [analysis['danceability'] for analysis in data['audio_features']]
+            instrumentalness = [analysis['instrumentalness'] for analysis in data['audio_features']]
+            valence = [analysis['valence'] for analysis in data['audio_features']]
+            energy = [analysis['energy'] for analysis in data['audio_features']]
+            key = [analysis['key'] for analysis in data['audio_features']]
+            time_signature = [analysis['time_signature'] for analysis in data['audio_features']]
+            tempo = [analysis['tempo'] for analysis in data['audio_features']]
+            
+            song_stats['danceability'] += danceability
+            song_stats['instrumentalness'] += instrumentalness
             song_stats['valence'] += valence
             song_stats['energy'] += energy
             song_stats['key'] += key
             song_stats['time_signature'] += time_signature
-            song_stats['tempo'] += bpm
-        return song_stats
+            song_stats['tempo'] += tempo
 
-    def parse_song_analysis(self, data : dict) -> dict:
-        danceability = [analysis['danceability'] for analysis in data['audio_features']]
-        instrumentalness = [analysis['instrumentalness'] for analysis in data['audio_features']]
-        valence = [analysis['valence'] for analysis in data['audio_features']]
-        energy = [analysis['energy'] for analysis in data['audio_features']]
-        key = [analysis['key'] for analysis in data['audio_features']]
-        time_signature = [analysis['time_signature'] for analysis in data['audio_features']]
-        tempo = [analysis['tempo'] for analysis in data['audio_features']]
-        return danceability, instrumentalness, valence, energy, key, time_signature, tempo
+        return song_stats
 
     def get_user_artists(self,token):
         # Obtain user's (who confirmed website) top artists

@@ -1,7 +1,8 @@
 import os
 import navbar
 import demo as guest
-
+# import flask_profiler
+from pstats import SortKey
 from dotenv import load_dotenv
 from parseJSON import parse_json
 from spotifyAPI import spotify_api
@@ -11,6 +12,23 @@ from flask import Flask, request, redirect, url_for, render_template, session
 
 app = Flask(__name__)
 load_dotenv() #Get env variables
+
+# app.config["DEBUG"] = True
+
+# app.config["flask_profiler"] = {
+#     "enabled": app.config["DEBUG"],
+#     "storage": {
+#         "engine": "sqlite"
+#     },
+#     "basicAuth":{
+#         "enabled": True,
+#         "username": "admin",
+#         "password": "admin"
+#     },
+#     "ignore": [
+# 	    "^/static/.*"
+# 	]
+# }
 
 client_id = os.getenv("CLIENT")
 client_secret = os.getenv("SECRET")
@@ -38,6 +56,8 @@ def login():
 def logout():
   session.pop('username', None)
   return redirect(url_for('login'))
+
+# flask_profiler.init_app(app)
 
 # Home page to display users top listened to songs according to spotify
 @app.route('/home')
@@ -116,7 +136,7 @@ def make_search():
   if check_error(get_tracks):
     return render_template("error.html", navbar=nav, searchbar=search)
 
-  return render_template(
+  return render_template( 
     'search.html',
     data        = get_tracks['tracks']['items'],
     navbar      = nav,
@@ -125,6 +145,7 @@ def make_search():
 
 # Given a track id, display analytics about the song including values like "danceability" and "valence"
 @app.route('/features/<track_id>')
+# @flask_profiler.profile()
 def audio_features(track_id):
 
   if 'code' not in session.keys():
@@ -203,7 +224,7 @@ def playlists(content_type,content_id):
 
   tracks = spotify.track_list(content_data, content_type, session['code'])
 
-  if len(tracks['song_names']) == 0:
+  if not tracks['song_names']:
     return render_template(
       'playlistdata.html', 
       name              = "No songs to display! Try adding songs to the playlist!",
@@ -243,7 +264,7 @@ def playlists(content_type,content_id):
       else:
         table += f"<div class='enlarge col'><figure><a href='/features/{tracks['song_id'][idx]}'><img src='{tracks['song_img'][idx]}' width='250' height='250'></a><figcaption><h3>{tracks['song_artist'][idx]}<br>{names}</h3></figcaption></figure></div>"
   table += "</div>"
-
+  
   return render_template(
     'playlistdata.html', 
     name           = playlist_name,
