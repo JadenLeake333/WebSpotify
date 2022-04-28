@@ -1,7 +1,7 @@
 import os
 import navbar
 import demo as guest
-# import flask_profiler
+import flask_profiler
 from pstats import SortKey
 from dotenv import load_dotenv
 from parseJSON import parse_json
@@ -13,22 +13,22 @@ from flask import Flask, request, redirect, url_for, render_template, session
 app = Flask(__name__)
 load_dotenv() #Get env variables
 
-# app.config["DEBUG"] = True
+app.config["DEBUG"] = True
 
-# app.config["flask_profiler"] = {
-#     "enabled": app.config["DEBUG"],
-#     "storage": {
-#         "engine": "sqlite"
-#     },
-#     "basicAuth":{
-#         "enabled": True,
-#         "username": "admin",
-#         "password": "admin"
-#     },
-#     "ignore": [
-# 	    "^/static/.*"
-# 	]
-# }
+app.config["flask_profiler"] = {
+    "enabled": app.config["DEBUG"],
+    "storage": {
+        "engine": "sqlite"
+    },
+    "basicAuth":{
+        "enabled": True,
+        "username": "admin",
+        "password": "admin"
+    },
+    "ignore": [
+	    "^/static/.*"
+	]
+}
 
 client_id = os.getenv("CLIENT")
 client_secret = os.getenv("SECRET")
@@ -57,7 +57,15 @@ def logout():
   session.pop('username', None)
   return redirect(url_for('login'))
 
-# flask_profiler.init_app(app)
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('error.html', navbar=navbar, error=404)
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('error.html', navbar=navbar, error=500)
+
+flask_profiler.init_app(app)
 
 # Home page to display users top listened to songs according to spotify
 @app.route('/home')
@@ -145,7 +153,7 @@ def make_search():
 
 # Given a track id, display analytics about the song including values like "danceability" and "valence"
 @app.route('/features/<track_id>')
-# @flask_profiler.profile()
+@flask_profiler.profile()
 def audio_features(track_id):
 
   if 'code' not in session.keys():
