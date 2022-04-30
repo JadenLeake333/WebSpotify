@@ -1,14 +1,18 @@
-import re
-import json
-
 def create_navbar():
+  import re
+  import json
+
+  endpoints = {
+  "Home": "/home",
+  "Search": "/search",
+  "View Playlists": "/playlists",
+  "Logout": "/logout"
+  }
+
   navbar = '<header> <nav class="nav nav-masthead float-md-end">'
 
-  with open ('endpoints.json') as uris:
-    endpoints = json.loads(uris.read())
-
-    for nav in endpoints.keys():
-      navbar += '<a class="nav-link fs-2" href="%s">%s</a>' %(endpoints[nav], nav)
+  for nav in endpoints.keys():
+    navbar += '<a class="nav-link fs-2" href="%s">%s</a>' %(endpoints[nav], nav)
 
   navbar += '</nav></header>'
 
