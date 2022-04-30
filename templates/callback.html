@@ -15,20 +15,24 @@
             {{searchbar | safe}}
             <h1>Welcome {{name}}!</h1>
             <h1>Here are some of your top songs: </h1>
-            <div class='container overflow-scroll w-100 h-75'> 
-                <div class='row'>
-                {%for songs in data['items']%}
-                    <div class='col enlarge child'>
-                        <figure>
-                            <a href="/features/{{songs['id']}}"><img src="{{songs['album']['images'][0]['url']}}" width='250' height='250'></a>
-                            <figcaption>
-                            <h1>{{songs['artists'][0]['name']}}</h1>
-                            <h1>{{songs['name']}}</h1>
-                            </figcaption>
-                        </figure>
+            <div class='container overflow-scroll w-100 h-75'>
+                {% if data['items'] | length == 0 %}
+                    <h1>Looks like you don't have any top songs yet! Listen to your favorite songs to see them here!</h1>
+                    {% else %}
+                    <div class='row'>
+                    {%for songs in data['items']%}
+                        <div class='col enlarge child'>
+                            <figure>
+                                <a href="/features/{{songs['id']}}"><img src="{{songs['album']['images'][0]['url']}}" width='250' height='250'></a>
+                                <figcaption>
+                                <h1>{{songs['artists'][0]['name']}}</h1>
+                                <h1>{{songs['name']}}</h1>
+                                </figcaption>
+                            </figure>
+                        </div>
+                    {% endfor %}
                     </div>
-                {%endfor%}
-                </div>
+                {% endif %}
             </div>
         </div>
         <script type='text/javascript' src='static/js/search.js'></script>

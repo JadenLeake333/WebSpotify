@@ -97,4 +97,31 @@ td {
   color: black;
   background-color: white;
 }
+.scroll-container {
+  border-radius: 5px;
+  overflow: hidden;
+}
 
+.scroll-text {
+  /* animation properties */
+  -moz-transform: translateX(100%);
+  -webkit-transform: translateX(100%);
+  transform: translateX(100%);
+  
+  -moz-animation: scrolling 8s linear infinite;
+  -webkit-animation: scrolling 8s linear infinite;
+  animation: scrolling 8s linear infinite;
+}
+
+@keyframes scrolling {
+  from {
+    -moz-transform: translateX(100%);
+    -webkit-transform: translateX(100%);
+    transform: translateX(100%);
+  }
+  to {
+    -moz-transform: translateX(-100%);
+    -webkit-transform: translateX(-100%);
+    transform: translateX(-100%);
+  }
+}
