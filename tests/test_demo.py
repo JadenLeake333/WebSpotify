@@ -41,4 +41,6 @@ def test_demo(client):
     assert response.status_code == 200
     assert b'<h3>Best Part (feat. Daniel Caesar)</h3>' in response.data
 
-
+    response = client.get('/features/4OBZT9EnhYIV17t4pGw7ig119823791287')
+    assert response.status_code == 404
+    assert b'<h2 class="text-center" style="margin: 15%;">404: Sorry, there was a problem loading that page!</h2>' in response.data

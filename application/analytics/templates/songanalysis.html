@@ -90,7 +90,7 @@
             <h1>Recommended Songs</h1>
             <div class="d-flex justify-content-between flex-wrap">
                 {% for songs in recommended["tracks"] %}
-                    <div>
+                    <div class="w-20 text-nowrap">
                         <a href="/features/{{songs['id']}}"><img src="{{songs['album']['images'][0]['url']}}" width="150" height='150'/></a>
                         <div class="scroll-container">
                             <h3 class="scroll-text">{{songs['name']}}</h3>

@@ -1,30 +1,11 @@
 import os
 from . import demo as guest_account
-from . import navbar, helper_functions, parseJSON, spotifyAPI
+from .. import navbar, helper_functions, parseJSON, auth, spotifyAPI
 from dotenv import load_dotenv
-# from helper_functions import * # check_error, pitch_class_conversion, ms_time_conversion
-# from youtube_api import YoutubeDataApi
 from flask import request, redirect, url_for, render_template, session, Blueprint, make_response
 
-load_dotenv() #Get env variables
-
-client_id = os.getenv("CLIENT")
-client_secret = os.getenv("SECRET")
-callback_url = os.getenv("CALLBACK")
-# youtubeAPI = YoutubeDataApi(os.getenv("UTUBEAPIKEY"))
-redirect_uri = callback_url
-permissions = 'user-top-read,playlist-modify-public,playlist-read-private,playlist-modify-private,playlist-read-collaborative'
-
-spotify = spotifyAPI.spotify_api(
-    client_id, 
-    client_secret,
-    permissions,
-    redirect_uri
-  )
-    
-authorize = spotify.get_url()
+spotify = auth.authorize()
 nav, search = navbar.create_navbar()
-
 
 # Blueprint Configuration
 routes_bp = Blueprint(
@@ -35,11 +16,12 @@ routes_bp = Blueprint(
 
 @routes_bp.route('/')
 def login():
-    return render_template("login.html", url=authorize)
+    return render_template("login.html", url=spotify.get_url())
 
 @routes_bp.route('/logout')
 def logout():
   session.pop('username', None)
+  session.pop('code', None)
   return redirect(
       url_for('routes_bp.login')
     )
@@ -68,8 +50,8 @@ def home():
     song_data = guest_account.top
     username = "Guest"
   else:
-    song_data = spotify.make_call("me/top/tracks",session['code'])
-    username = spotify.make_call("me",session['code'])['display_name']
+    song_data = spotify.make_call("me/top/tracks", session['code'])
+    username = spotify.make_call("me", session['code'])['display_name']
   return render_template(
     'callback.html',
     data           = song_data, # Using Jinja template engine
@@ -142,40 +124,6 @@ def make_search():
     searchbar   = search
   )
 
-# Given a track id, display analytics about the song including values like "danceability" and "valence"
-@routes_bp.route('/features/<track_id>')
-# @flask_profiler.profile()
-def audio_features(track_id):
-
-  if 'code' not in session.keys():
-    return redirect(url_for('routes_bp.login'))
-
-  track_info = spotify.make_call(f"tracks/{track_id}",session['code'])
-  song_features = spotify.song_analysis([track_id],session['code'])
-  
-  if helper_functions.check_error(song_features) or helper_functions.check_error(track_info):
-    return render_template("error.html", error=404, navbar=nav, searchbar=search)
-
-  recommended = spotify.make_call("recommendations", session['code'], {"seed_tracks":track_info['id'],"limit": 5})
-  translate_key = helper_functions.pitch_class_conversion(song_features['key'][0])
-  return render_template(
-      'songanalysis.html',
-      album_id         = track_info['album']['id'],
-      img              = track_info['album']['images'][0]['url'],
-      artist           = track_info['album']['artists'][0]['name'],
-      name             = track_info['name'],
-      preview_url      = track_info['preview_url'],
-      dance            = round(float(song_features['danceability'][0]) * 100),
-      energy           = round(float(song_features['energy'][0]) * 100),
-      instrumentalness = round(float(song_features['instrumentalness'][0]) * 100),
-      valence          = round(float(song_features['valence'][0]) * 100),
-      tempo            = round(song_features['tempo'][0]),
-      time_signature   = song_features['time_signature'][0],
-      key              = translate_key,
-      recommended      = recommended,
-      navbar           = nav,
-      searchbar        = search
-    )
 
 # Display users playlists 
 @routes_bp.route('/playlists')
@@ -197,7 +145,7 @@ def view_playlists():
   next_playlist = parseJSON.parse_json.extract_values(user_playlists, 'next')
   
   while next_playlist[0]:
-    next_page = spotify.get_next(next_playlist[0],session['code'])
+    next_page = spotify.get_next(next_playlist[0], session['code'])
 
     for item in next_page['items']:
       user_playlists['items'].append(item)
@@ -209,74 +157,6 @@ def view_playlists():
     data                = user_playlists,
     navbar              = nav,
     searchbar           = search
-  )
-
-# Display songs from playlists or albums
-@routes_bp.route('/content/<content_type>/<content_id>')
-def playlists(content_type,content_id):
-  if 'code' not in session.keys():
-    return redirect(url_for('routes_bp.login'))
-
-  content_data = spotify.make_call(f"{content_type}/{content_id}",session['code'])
-
-  if helper_functions.check_error(content_data):
-    return render_template("error.html", error=404, navbar=nav,searchbar=search)
-
-  tracks = spotify.track_list(content_data, content_type, session['code'])
-
-  if not tracks['song_names']:
-    return render_template(
-      'playlistdata.html', 
-      name              = "No songs to display! Try adding songs to the playlist!",
-      Length            = 0,
-      duration          = 0,
-      display_analysis  = "none",
-      table             = "",
-      dance             = 0,
-      energy            = 0,
-      instrumental      = 0,
-      valence           = 0,
-      navbar            = nav,
-      searchbar         = search
-    )
-
-  num_tracks = len(tracks['song_names'])
-
-  playlist_name = content_data['name']
-
-  analysis = spotify.song_analysis(tracks['song_id'], session['code'])
-  duration = helper_functions.ms_time_conversion(tracks['total_duration'])
-
-  # Songs that do no originate from Spotify do not have analytics. Must be checked for.
-  if len(analysis['danceability']) > 0:
-    dance_avg = round((sum(analysis['danceability']) / len(analysis['danceability'])) * 100)
-    energy_avg = round((sum(analysis['energy']) / len(analysis['energy'])) * 100)
-    instrumentalness_avg = round((sum(analysis['instrumentalness']) / len(analysis['instrumentalness'])) * 100)
-    valence_avg = round((sum(analysis['valence']) / len(analysis['valence'])) * 100)
-  else:
-    dance_avg, energy_avg, instrumentalness_avg, valence_avg = 0,0,0,0
-
-  # Create the card for displaying Song Images and Titles
-  table = "<div class='row'>"
-  for idx, names in enumerate(tracks['song_names']):
-      if tracks['song_id'][idx] == "":
-        table += f"<div class='enlarge col'><figure><img src='../../static/assets/unknown.png' width='250' height='250'><figcaption><h3>{tracks['song_artist'][idx]}<br>{names}</h3></figcaption></figure></div>"
-      else:
-        table += f"<div class='enlarge col'><figure><a href='/features/{tracks['song_id'][idx]}'><img src='{tracks['song_img'][idx]}' width='250' height='250'></a><figcaption><h3>{tracks['song_artist'][idx]}<br>{names}</h3></figcaption></figure></div>"
-  table += "</div>"
-  
-  return render_template(
-    'playlistdata.html', 
-    name           = playlist_name,
-    duration       = duration,
-    length         = num_tracks,
-    table          = table,
-    dance          = dance_avg,
-    energy         = energy_avg,
-    instrumental   = instrumentalness_avg,
-    valence        = valence_avg,
-    navbar         = nav,
-    searchbar      = search
   )
 
 # Allows users to search track by its spotify uri

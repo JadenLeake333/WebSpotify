@@ -4,7 +4,7 @@ from application import helper_functions, parseJSON
 from urllib.parse import urlencode
 
 class spotify_api():
-    def __init__(self,client,secret,scope,redirect_uri):
+    def __init__(self,client=None, secret=None, scope=None, redirect_uri=None):
         self.client = client
         self.secret = secret
         self.scope = scope

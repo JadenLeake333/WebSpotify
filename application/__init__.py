@@ -12,10 +12,12 @@ def create_app():
 
     with app.app_context():
         # Include our Routes
-        from . import routes
+        from .home import routes
+        from .analytics import analytics
 
         # Register Blueprints
         app.register_blueprint(routes.routes_bp)
+        app.register_blueprint(analytics.analytics_bp)
         app.secret_key = os.getenv("SESSIONSECRET")
 
         return app
