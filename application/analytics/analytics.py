@@ -77,7 +77,7 @@ def playlists(content_type,content_id):
             404)
 
   tracks = spotify.track_list(content_data, content_type, session['code'])
-
+  
   if not tracks['song_names']:
     return render_template(
       'playlistdata.html', 

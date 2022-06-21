@@ -1,5 +1,5 @@
 class Config(object):
-    DEBUG = False
+    DEBUG = True
     TESTING = False
     STATIC_FOLDER = 'application/static'
     TEMPLATES_FOLDER = 'application/templates'

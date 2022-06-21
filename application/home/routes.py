@@ -71,9 +71,15 @@ def demo():
 # Initalize access token
 @routes_bp.route('/callback')
 def main():
-  exchange_code = request.args.get('code')  # Parse the code from callback url
-  session['code'] = spotify.get_access_token(exchange_code)
-  session['type'] = "user"
+  exchange_code = request.args.get('code')  # Parse the code from callback url\
+  if exchange_code:
+    try:
+      session['code'] = spotify.get_access_token(exchange_code)
+      session['type'] = "user"
+    except:
+      return redirect(url_for('routes_bp.login'))
+  else:
+    return redirect(url_for('routes_bp.login'))
 
   return redirect(url_for('routes_bp.home'))
 
