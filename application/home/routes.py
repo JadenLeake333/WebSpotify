@@ -26,20 +26,6 @@ def logout():
       url_for('routes_bp.login')
     )
 
-@routes_bp.errorhandler(404)
-def not_found_error(error):
-    return make_response(
-        render_template('error.html', navbar=navbar, searchbar=search, error=404), 
-        404
-      )
-
-@routes_bp.errorhandler(500)
-def internal_error(error):
-    return make_response(
-        render_template('error.html', navbar=navbar, searchbar=search, error=500),
-        500
-      )
-
 # Home page to display users top listened to songs according to spotify
 @routes_bp.route('/home')
 def home():
@@ -163,29 +149,6 @@ def view_playlists():
     data                = user_playlists,
     navbar              = nav,
     searchbar           = search
-  )
-
-# Allows users to search track by its spotify uri
-@routes_bp.route('/searchtrack')
-def tracks():
-  if 'code' not in session.keys():
-    return redirect(url_for('routes_bp.login'))
-
-  track = request.args.get('track')
-  track_id = track.split(":")[2]
-  track_data = spotify.make_call(f"tracks/{track_id}",session['code'])
-
-  if helper_functions.check_error(content_data):
-    return render_template("error.html", error=404, navbar=nav, searchbar=search)
-
-  return redirect(
-    url_for(
-      'routes_bp.audio_features',
-      feat    = track_id,
-      name    = track_data['name'],
-      artist  = track_data['artists'][0]['name'],
-      img     = track_data['album']['images'][0]['url'],
-    )
   )
 
 # @routes_bp.route('/recommend')

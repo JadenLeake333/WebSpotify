@@ -1,6 +1,10 @@
+
+# To Run tests run command "python -m pytest" in terminal
+
 import pytest
 from flask import Flask
 from application import create_app
+
 @pytest.fixture()
 def app():
     app = create_app()
@@ -35,12 +39,16 @@ def test_demo(client):
 
     response = client.get('/content/playlists/2NPt11BnuqkJs4vFcpwVhM')
     assert response.status_code == 200
-    assert b'<h1>R&amp;B - 9 tracks | Duration: 37m57s</h1>' in response.data
+    assert b'9 tracks' in response.data
 
     response = client.get('/features/4OBZT9EnhYIV17t4pGw7ig')
     assert response.status_code == 200
-    assert b'<h3>Best Part (feat. Daniel Caesar)</h3>' in response.data
+    assert b'<h3>Best Part (feat. H.E.R.)</h3>' in response.data
 
     response = client.get('/features/4OBZT9EnhYIV17t4pGw7ig119823791287')
+    assert response.status_code == 404
+    assert b'<h2 class="text-center" style="margin: 15%;">404: Sorry, there was a problem loading that page!</h2>' in response.data
+
+    response = client.get('/notarealendpoint')
     assert response.status_code == 404
     assert b'<h2 class="text-center" style="margin: 15%;">404: Sorry, there was a problem loading that page!</h2>' in response.data

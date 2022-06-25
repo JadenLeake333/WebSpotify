@@ -99,6 +99,7 @@ def playlists(content_type,content_id):
   playlist_name = content_data['name']
 
   analysis = spotify.song_analysis(tracks['song_id'], session['code'])
+  print(tracks['total_duration'])
   duration = helper_functions.ms_time_conversion(tracks['total_duration'])
 
   # Songs that do no originate from Spotify do not have analytics. Must be checked for.

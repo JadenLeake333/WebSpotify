@@ -9,10 +9,11 @@ def make_table():
 # Convert time from ms into H:M:S str
 def ms_time_conversion(time : int) -> str:
     import math
-    seconds=math.floor((time/1000)%60)
-    minutes=math.floor((time/(1000*60))%60)
-    hours=math.floor((time/(1000*60*60))%24)
-    return f"{str(hours) + 'h' if hours > 0 else ''}{str(minutes) + 'm' if minutes > 0 else ''}{str(seconds) + 's' if seconds > 0 else ''}"
+    seconds = math.floor((time/1000)%60)
+    minutes = math.floor((time/(1000*60))%60)
+    hours = math.floor((time/(1000*60*60)))
+    days =  math.floor(hours / 24)
+    return f"{str(days) + 'd' if days > 0 else ''}{str(hours%24) + 'h' if hours > 24 else str(hours) + 'h'}{str(minutes) + 'm' if minutes > 0 else ''}{str(seconds) + 's' if seconds > 0 else ''}"
 
 # Split list into n lenghted segments
 def split_list(lst : list, n : int) -> list:
@@ -25,7 +26,7 @@ def pluraizer(word : str, pluralize : bool) -> str:
     return word
 
 # https://en.wikipedia.org/wiki/Pitch_class
-# Will return Key of a song based on integer (0 = C, 1 = C♯, D♭ )
+# Will return Key of a song based on integer (0 = C, 1 = C♯)
 def pitch_class_conversion(pitch : int) -> str:
     if pitch == 0:
         return "C"
